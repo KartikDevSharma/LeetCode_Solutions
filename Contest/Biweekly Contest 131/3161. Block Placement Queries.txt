@@ -1,0 +1,116 @@
+There exists an infinite number line, with its origin at 0 and extending towards the positive x-axis.
+
+You are given a 2D array queries, which contains two types of queries:
+
+For a query of type 1, queries[i] = [1, x]. Build an obstacle at distance x from the origin. It is guaranteed that there is no obstacle at distance x when the query is asked.
+For a query of type 2, queries[i] = [2, x, sz]. Check if it is possible to place a block of size sz anywhere in the range [0, x] on the line, such that the block entirely lies in the range [0, x]. A block cannot be placed if it intersects with any obstacle, but it may touch it. Note that you do not actually place the block. Queries are separate.
+Return a boolean array results, where results[i] is true if you can place the block specified in the ith query of type 2, and false otherwise.
+
+ 
+
+Example 1:
+
+Input: queries = [[1,2],[2,3,3],[2,3,1],[2,2,2]]
+
+Output: [false,true,true]
+
+Explanation:
+
+
+
+For query 0, place an obstacle at x = 2. A block of size at most 2 can be placed before x = 3.
+
+Example 2:
+
+Input: queries = [[1,7],[2,7,6],[1,2],[2,7,5],[2,7,6]]
+
+Output: [true,true,false]
+
+Explanation:
+
+
+
+Place an obstacle at x = 7 for query 0. A block of size at most 7 can be placed before x = 7.
+Place an obstacle at x = 2 for query 2. Now, a block of size at most 5 can be placed before x = 7, and a block of size at most 2 before x = 2.
+ 
+
+Constraints:
+
+1 <= queries.length <= 15 * 10^4
+2 <= queries[i].length <= 3
+1 <= queries[i][0] <= 2
+1 <= x, sz <= min(5 * 10^4, 3 * queries.length)
+The input is generated such that for queries of type 1, no obstacle exists at distance x when the query is asked.
+The input is generated such that there is at least one query of type 2.
+
+
+Approach
+Not optimal but intuitive.
+
+axis: A sorted list that stores the blocks along the axis.
+itvl: A segment tree that stores the intervals between the blocks and supports range query of the maximal interval from 0 to each block.
+
+When adding a block, we need to update the interval of the next block (from nxt - prv to nxt - q[1]) and the current block (added as q[1] - prv).
+
+When answering a type-2 queries, we query the maximal interval before the previous block (itvl.query(prv)) and compare it with the last interval (q[1] - prv). The answer is true iff sz is less than or equal to the maximal interval we found.
+
+Complexity
+Time complexity: Qlog⁡Q+Qlog⁡MQ \log Q + Q \log MQlogQ+QlogM, where QQQ is the length of queries and MMM is the range of the axis, i.e. max(q[1]).
+Space complexity: Q+MQ + MQ+M.
+
+
+from sortedcontainers import SortedList
+class Solution:
+    def getResults(self, queries: List[List[int]]) -> List[bool]:
+
+        # Blocks along the axis
+        axis = SortedList()
+
+        # Range Max of intervals from 0 to each block
+        itvl = SegTree(max(q[1] for q in queries))
+
+        res = []
+        axis.add(0)
+        itvl.update(0,0)
+
+        for q in queries:
+            if q[0] == 1:
+                ind = axis.bisect(q[1])
+                if ind < len(axis):
+                    # Update the interval of the next block
+                    nxt = axis[ind]
+                    itvl.update(nxt, nxt-q[1])
+                # Set the interval of the current block
+                itvl.update(q[1], q[1] - axis[ind-1])
+                # Add the current block on axis
+                axis.add(q[1])
+            else:
+                # Find the previous block
+                prv = axis[axis.bisect(q[1])-1]
+                # Range query the max interval before prv
+                mx = max(q[1]-prv, itvl.query(prv))
+
+                res.append(q[2] <= mx)
+        return res
+
+class SegTree:
+
+    def __init__(self, n: int):
+        self.n = 1 << n.bit_length()
+        self.tree = [0] * (self.n*2)
+
+    def update(self, ind: int, val: int):
+        ind += self.n
+        self.tree[ind] = val
+        while ind > 1:
+            ind //= 2
+            self.tree[ind] = max(self.tree[ind*2], self.tree[ind*2+1])
+    
+    def query(self, ind: int) -> int:
+        ind += self.n
+        res = self.tree[ind]
+        while ind > 1:
+            if ind%2 == 1:
+                res = max(res, self.tree[ind-1])
+            ind //= 2
+        return res
