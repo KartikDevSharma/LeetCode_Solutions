@@ -1,0 +1,25 @@
+from typing import List
+from collections import deque
+
+class Solution:
+    def findWinningPlayer(self, ability_scores: List[int], target_wins: int) -> int:
+        num_players = len(ability_scores)
+        if target_wins >= num_players:
+            return ability_scores.index(max(ability_scores))
+
+        player_queue = deque(range(num_players))
+        current_player_idx = player_queue.popleft()
+        consecutive_wins = 0
+
+        while consecutive_wins < target_wins:
+            opponent_idx = player_queue.popleft()
+
+            if ability_scores[current_player_idx] > ability_scores[opponent_idx]:
+                consecutive_wins += 1
+                player_queue.append(opponent_idx)
+            else:
+                consecutive_wins = 1
+                player_queue.append(current_player_idx)
+                current_player_idx = opponent_idx
+
+        return current_player_idx

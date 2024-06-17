@@ -1,0 +1,20 @@
+from typing import List
+
+class Solution:
+    def maximumLength(self, nums: List[int], k: int) -> int:
+        length_of_nums = len(nums)
+        dp = [[1] * (k + 1) for _ in range(length_of_nums)]
+        max_len = 1
+
+        for current_index in range(1, length_of_nums):
+            for diff_count in range(k + 1):
+                max_length_with_diff = 1
+                for prev_index in range(current_index):
+                    if nums[prev_index] == nums[current_index]:
+                        max_length_with_diff = max(max_length_with_diff, dp[prev_index][diff_count] + 1)
+                    elif diff_count > 0:
+                        max_length_with_diff = max(max_length_with_diff, dp[prev_index][diff_count - 1] + 1)
+                dp[current_index][diff_count] = max_length_with_diff
+                max_len = max(max_len, dp[current_index][diff_count])
+
+        return max_len
