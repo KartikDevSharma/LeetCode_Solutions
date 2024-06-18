@@ -1,5 +1,5 @@
 # LeetCode_Solutions.
-Welcome to My LeetCode Solutions in Python!
+Welcome to My LeetCode Solutions in Python and Java!
 This repository serves as a central hub for my journey on LeetCode, housing my solutions to various coding challenges in Python. It encompasses both regular LeetCode problems and solutions from past contests.
 Goals and Approach:
 * **Sharpening Algorithmic Skills:** I strive to continuously refine my problem-solving abilities using LeetCode's diverse set of challenges. Each solution prioritizes clarity, efficiency, and a solid grasp of the underlying concepts.
