@@ -1,0 +1,44 @@
+from typing import List
+
+class Solution:
+    def minimumArea(self, grid: List[List[int]]) -> int:
+        rows, cols = len(grid), len(grid[0])
+        top = bottom = left = right = None
+        
+        for r in range(rows):
+            for c in range(cols):
+                if grid[r][c] == 1:
+                    if top is None:
+                        top = bottom = r
+                        left = right = c
+                    else:
+                        top = min(top, r)
+                        bottom = max(bottom, r)
+                        left = min(left, c)
+                        right = max(right, c)
+        
+        if top is None:
+            return 0
+        
+        return (bottom - top + 1) * (right - left + 1)
+
+
+
+
+
+
+SECOND SOLUTION
+
+
+class Solution:
+    def minimumArea(self, grid: List[List[int]]) -> int:
+        i1, j1 = inf, inf
+        i2, j2 = 0, 0
+        for i, row in enumerate(grid):
+            for j, x in enumerate(row):
+                if x:
+                    i1 = min(i1, i)
+                    j1 = min(j1, j)
+                    i2 = max(i2, i)
+                    j2 = max(j2, j)
+        return (i2 - i1 + 1) * (j2 - j1 + 1)

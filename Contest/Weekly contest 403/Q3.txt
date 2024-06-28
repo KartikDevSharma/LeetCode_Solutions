@@ -1,0 +1,58 @@
+from typing import List
+
+class Solution:
+    def recursive_max_cost(self, memo: List[List[int]], array: List[int], position: int, sign_state: int) -> int:
+        
+        if position < 0:
+            return 0
+        if position == 0:
+            return array[0] if sign_state == 0 else float('-inf')
+        
+        
+        if memo[position][sign_state] != float('-inf'):
+            return memo[position][sign_state]
+        
+        max_cost = float('-inf')
+        current_value = array[position] if sign_state == 0 else -array[position]
+        
+       
+        if sign_state == 0:
+         
+            max_cost = max(
+                current_value + self.recursive_max_cost(memo, array, position - 1, 0),
+                current_value + self.recursive_max_cost(memo, array, position - 1, 1)
+            )
+        else:
+            
+            max_cost = current_value + self.recursive_max_cost(memo, array, position - 1, 0)
+       
+        memo[position][sign_state] = max_cost
+        return max_cost
+
+    def maximumTotalCost(self, nums: List[int]) -> int:
+        n = len(nums)
+        
+        memo = [[float('-inf')] * 2 for _ in range(n)]
+       
+        positive_start = self.recursive_max_cost(memo, nums, n - 1, 0)
+        negative_start = self.recursive_max_cost(memo, nums, n - 1, 1)
+        
+        return max(positive_start, negative_start)
+
+
+
+
+
+
+SECOND SOLUTION
+
+class Solution:
+    def maximumTotalCost(self, nums: List[int]) -> int:
+        @cache
+        def dp(i, sign):
+            if i >= len(nums):
+                return 0
+            return sign * nums[i] + max(dp(i+1, 1), dp(i+1, -sign))
+        return dp(0, 1)
+
+

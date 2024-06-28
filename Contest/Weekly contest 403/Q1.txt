@@ -1,0 +1,13 @@
+class Solution:
+    def minimumAverage(self, nm: List[int]) -> float:
+
+        aavrg = []
+        nm.sort()  
+
+        while nm:
+            minEl = nm.pop(0) 
+            maxElement = nm.pop(-1)  
+            avg = (minEl + maxElement) / 2
+            aavrg.append(avg)
+
+        return min(aavrg)  
