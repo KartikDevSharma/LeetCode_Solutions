@@ -1,4 +1,9 @@
-# LeetCode_Solutions.
+<p >
+  <img width="100%" src="https://github.com/KartikDevSharma/KartikDevSharma/blob/main/Files/LeetCode_Logo_black_with_text.svg.png">
+</p>
+
+<h1 align= "center">LeetCode_Solutions</h1>
+
 Welcome to My LeetCode Solutions in Python and Java!
 This repository serves as a central hub for my journey on LeetCode, housing my solutions to various coding challenges in Python. It encompasses both regular LeetCode problems and solutions from past contests.
 Goals and Approach:
