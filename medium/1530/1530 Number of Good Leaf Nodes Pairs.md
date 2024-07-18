@@ -1,5 +1,6 @@
 
-![1ms.png](https://assets.leetcode.com/users/images/0c15f1b4-18e9-4445-9d69-321f6d88f193_1721272456.8038964.png)
+![15301.png](https://github.com/KartikDevSharma/LeetCode_Solutions/blob/main/medium/1530/15301.png)
+![15302.png](https://github.com/KartikDevSharma/LeetCode_Solutions/blob/main/medium/1530/15302.png)
 ![1ms.png](https://assets.leetcode.com/users/images/0c15f1b4-18e9-4445-9d69-321f6d88f193_1721272456.8038964.png)
 
 ## Problem Statement (Explanation):
