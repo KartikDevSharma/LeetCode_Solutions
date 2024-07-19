@@ -1,4 +1,4 @@
-```
+
 1380. Lucky Numbers in a Matrix
 
 Given an m x n matrix of distinct numbers, return all lucky numbers in the matrix in any order.
@@ -31,7 +31,7 @@ n == mat[i].length
 1 <= n, m <= 50
 1 <= matrix[i][j] <= 10^5.
 All elements in the matrix are distinct.
-```
+
 
 ![imagetod.png](https://assets.leetcode.com/users/images/1d50bc4b-bc2a-47f6-a974-ce92b845a70f_1721356504.8402164.png)
 
