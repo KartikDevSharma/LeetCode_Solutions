@@ -129,9 +129,12 @@ It works for both odd and even length numbers and correctly handles edge cases a
 
 - Space complexity: O(log n). We're using a constant amount of extra space (the candidates array is always size 5), but we need O(log n) space to store the string representation of the number and the result.
 
+In a general context (without these input constraints), both the TC and SC  would be O(log n), But here Problem's constraints create an effective "ceiling" on the input size So dont get confused when the leetcode engine shows it as O(1).
+
 # Code
 Java
-```Java []
+
+```java []
 class Solution {
     public String nearestPalindromic(String numberStr) {
         long number = Long.parseLong(numberStr);
@@ -172,6 +175,265 @@ class Solution {
         }
         return palindrome;
     }
+}
+
+//https://leetcode.com/problems/find-the-closest-palindrome/submissions/1364740180/
+```
+C++
+```C++ []
+class Solution {
+public:
+    string nearestPalindromic(string numberStr) {
+        long long number = stoll(numberStr);
+        if (number <= 10) return to_string(number - 1);
+        if (number == 11) return "9";
+
+        int length = numberStr.length();
+        long long leftHalf = stoll(numberStr.substr(0, (length + 1) / 2));
+        
+        vector<long long> palindromeCandidates(5);
+        palindromeCandidates[0] = generatePalindromeFromLeft(leftHalf - 1, length % 2 == 0);
+        palindromeCandidates[1] = generatePalindromeFromLeft(leftHalf, length % 2 == 0);
+        palindromeCandidates[2] = generatePalindromeFromLeft(leftHalf + 1, length % 2 == 0);
+        palindromeCandidates[3] = pow(10, length - 1) - 1;
+        palindromeCandidates[4] = pow(10, length) + 1;
+
+        long long nearestPalindrome = 0;
+        long long minDifference = LLONG_MAX;
+
+        for (long long candidate : palindromeCandidates) {
+            if (candidate == number) continue;
+            long long difference = abs(candidate - number);
+            if (difference < minDifference || (difference == minDifference && candidate < nearestPalindrome)) {
+                minDifference = difference;
+                nearestPalindrome = candidate;
+            }
+        }
+
+        return to_string(nearestPalindrome);
+    }
+
+private:
+    long long generatePalindromeFromLeft(long long leftHalf, bool isEvenLength) {
+        long long palindrome = leftHalf;
+        if (!isEvenLength) leftHalf /= 10;
+        while (leftHalf > 0) {
+            palindrome = palindrome * 10 + leftHalf % 10;
+            leftHalf /= 10;
+        }
+        return palindrome;
+    }
+};
+
+
+//https://leetcode.com/problems/find-the-closest-palindrome/submissions/1364985439/
+```
+Python
+```Python []
+class Solution:
+    def nearestPalindromic(self, numberStr: str) -> str:
+        number = int(numberStr)
+        if number <= 10:
+            return str(number - 1)
+        if number == 11:
+            return "9"
+
+        length = len(numberStr)
+        leftHalf = int(numberStr[:(length + 1) // 2])
+        
+        palindromeCandidates = [
+            self.generatePalindromeFromLeft(leftHalf - 1, length % 2 == 0),
+            self.generatePalindromeFromLeft(leftHalf, length % 2 == 0),
+            self.generatePalindromeFromLeft(leftHalf + 1, length % 2 == 0),
+            10**(length - 1) - 1,
+            10**length + 1
+        ]
+
+        nearestPalindrome = 0
+        minDifference = float('inf')
+
+        for candidate in palindromeCandidates:
+            if candidate == number:
+                continue
+            difference = abs(candidate - number)
+            if difference < minDifference or (difference == minDifference and candidate < nearestPalindrome):
+                minDifference = difference
+                nearestPalindrome = candidate
+
+        return str(nearestPalindrome)
+
+    def generatePalindromeFromLeft(self, leftHalf: int, isEvenLength: bool) -> int:
+        palindrome = leftHalf
+        if not isEvenLength:
+            leftHalf //= 10
+        while leftHalf > 0:
+            palindrome = palindrome * 10 + leftHalf % 10
+            leftHalf //= 10
+        return palindrome
+
+
+#https://leetcode.com/problems/find-the-closest-palindrome/submissions/1365095966/
+```
+Go
+```Go []
+
+func nearestPalindromic(numberStr string) string {
+    number, _ := strconv.ParseInt(numberStr, 10, 64)
+    if number <= 10 {
+        return strconv.FormatInt(number-1, 10)
+    }
+    if number == 11 {
+        return "9"
+    }
+
+    length := len(numberStr)
+    leftHalf, _ := strconv.ParseInt(numberStr[:(length+1)/2], 10, 64)
+    
+    palindromeCandidates := make([]int64, 5)
+    palindromeCandidates[0] = generatePalindromeFromLeft(leftHalf-1, length%2 == 0)
+    palindromeCandidates[1] = generatePalindromeFromLeft(leftHalf, length%2 == 0)
+    palindromeCandidates[2] = generatePalindromeFromLeft(leftHalf+1, length%2 == 0)
+    palindromeCandidates[3] = int64(math.Pow10(length-1)) - 1
+    palindromeCandidates[4] = int64(math.Pow10(length)) + 1
+
+    var nearestPalindrome int64
+    minDifference := int64(math.MaxInt64)
+
+    for _, candidate := range palindromeCandidates {
+        if candidate == number {
+            continue
+        }
+        difference := abs(candidate - number)
+        if difference < minDifference || (difference == minDifference && candidate < nearestPalindrome) {
+            minDifference = difference
+            nearestPalindrome = candidate
+        }
+    }
+
+    return strconv.FormatInt(nearestPalindrome, 10)
+}
+
+func generatePalindromeFromLeft(leftHalf int64, isEvenLength bool) int64 {
+    palindrome := leftHalf
+    if !isEvenLength {
+        leftHalf /= 10
+    }
+    for leftHalf > 0 {
+        palindrome = palindrome*10 + leftHalf%10
+        leftHalf /= 10
+    }
+    return palindrome
+}
+
+func abs(x int64) int64 {
+    if x < 0 {
+        return -x
+    }
+    return x
+}
+
+//https://leetcode.com/problems/find-the-closest-palindrome/submissions/1364986993/
+```
+Rust
+```Rust []
+impl Solution {
+    pub fn nearest_palindromic(number_str: String) -> String {
+        let number: i64 = number_str.parse().unwrap();
+        if number <= 10 {
+            return (number - 1).to_string();
+        }
+        if number == 11 {
+            return "9".to_string();
+        }
+
+        let length = number_str.len();
+        let left_half: i64 = number_str[..(length + 1) / 2].parse().unwrap();
+        
+        let mut palindrome_candidates = vec![
+            Self::generate_palindrome_from_left(left_half - 1, length % 2 == 0),
+            Self::generate_palindrome_from_left(left_half, length % 2 == 0),
+            Self::generate_palindrome_from_left(left_half + 1, length % 2 == 0),
+            10i64.pow((length - 1) as u32) - 1,
+            10i64.pow(length as u32) + 1
+        ];
+
+        let mut nearest_palindrome = 0;
+        let mut min_difference = i64::MAX;
+
+        for candidate in palindrome_candidates.iter() {
+            if *candidate == number {
+                continue;
+            }
+            let difference = (candidate - number).abs();
+            if difference < min_difference || (difference == min_difference && *candidate < nearest_palindrome) {
+                min_difference = difference;
+                nearest_palindrome = *candidate;
+            }
+        }
+
+        nearest_palindrome.to_string()
+    }
+
+    fn generate_palindrome_from_left(mut left_half: i64, is_even_length: bool) -> i64 {
+        let mut palindrome = left_half;
+        if !is_even_length {
+            left_half /= 10;
+        }
+        while left_half > 0 {
+            palindrome = palindrome * 10 + left_half % 10;
+            left_half /= 10;
+        }
+        palindrome
+    }
+}
+
+//https://leetcode.com/problems/find-the-closest-palindrome/submissions/1364987848/
+```
+JavaScript
+```JavaScript []
+/**
+ * @param {string} numberStr
+ * @return {string}
+ */
+var nearestPalindromic = function(numberStr) {
+    let number = BigInt(numberStr);
+    if (number <= 10n) return (number - 1n).toString();
+    if (number === 11n) return "9";
+
+    let length = numberStr.length;
+    let leftHalf = BigInt(numberStr.slice(0, (length + 1) / 2));
+    
+    let palindromeCandidates = [
+        generatePalindromeFromLeft(leftHalf - 1n, length % 2 === 0),
+        generatePalindromeFromLeft(leftHalf, length % 2 === 0),
+        generatePalindromeFromLeft(leftHalf + 1n, length % 2 === 0),
+        BigInt(10n ** BigInt(length - 1)) - 1n,
+        BigInt(10n ** BigInt(length)) + 1n
+    ];
+
+    let nearestPalindrome = 0n;
+    let minDifference = BigInt(Number.MAX_SAFE_INTEGER);
+
+    for (let candidate of palindromeCandidates) {
+        if (candidate === number) continue;
+        let difference = candidate > number ? candidate - number : number - candidate;
+        if (difference < minDifference || (difference === minDifference && candidate < nearestPalindrome)) {
+            minDifference = difference;
+            nearestPalindrome = candidate;
+        }
+    }
+
+    return nearestPalindrome.toString();
+};
+
+function generatePalindromeFromLeft(leftHalf, isEvenLength) {
+    let palindrome = leftHalf;
+    if (!isEvenLength) leftHalf = leftHalf / 10n;
+    while (leftHalf > 0n) {
+        palindrome = palindrome * 10n + leftHalf % 10n;
+        leftHalf = leftHalf / 10n;
+    }
+    return palindrome;
 }
 ```
 # You don't wanna read this 
