@@ -1,4 +1,5 @@
 
+
 # Intuition
 
 
@@ -17,9 +18,7 @@ Now, let's think about palindromes. What makes a number a palindrome? It reads t
 
  for a palindrome like 12321, the next larger palindrome is 12421, and the next smaller is 12221. This pattern holds for both odd and even-length palindromes. This means that we can generate candidate palindromes by using left half of the number
 
-My First approach had some limitations it was failing a lot of edge cases. It was handling several special cases separately, which made my code more complex plus It also wasn't considering all possible nearest palindromes in some cases.
-
-So in this approach, I'll consider five candidate palindromes:
+My First approach had some limitations it was failing a lot of edge cases. It was handling several special cases separately, which made my code more complex plus It also wasn't considering all possible nearest palindromes in some cases for ex consider that we're dealing with numbers up to 18 digits long. That's a range from 1 to 999,999,999,999,999,999! We can't simply generate all palindromes and check which one is closest. That would take far too long. We need to be think about this. So in this approach, I'll consider five candidate palindromes:
 
 1. The palindrome formed by decrementing the left half of the number.
 2. The palindrome formed by the left half of the number as is.
@@ -29,45 +28,57 @@ So in this approach, I'll consider five candidate palindromes:
 
 Why these five candidates? Let's think about it:
 
-1-3: These cover the cases where the nearest palindrome is close to the original number. By considering the current left half and its incremented and decremented versions, we cover a range of nearby palindromes.
+1-3: These cover the cases where the nearest palindrome is close to the original number. By considering the current left half and its incremented and decremented versions, we cover a range of nearby palindromes. So in simple terms the closest palindrome is likely to be very near our original number. By considering these three options, we're exploring the immediate neighborhood of our number in the world of palindromes.
 
 4: This covers cases where the nearest palindrome might be a "9" palindrome just below our number. For example, if our number is 1000, the nearest smaller palindrome is 999.
 
 5: This covers cases where the nearest palindrome might be just above our number with an additional digit. For example, if our number is 999, the nearest larger palindrome is 1001.
 
+These cases (4 and 5) occur when we're near a "boundary" where the number of digits changes. To handle these, we need to consider two more special cases:
+-  The number with all 9's that has one digit less than our original number
+- The number with all 0's (and 1's at the ends) that has one more digit than our original number
+
 Since we are considering these five candidates, we are making sure that we don't miss any potential nearest palindromes, regardless of  what the input number's structure is.
 
 Another thing to note here is that we can generate palindromes by manipulating just the left half of the number. This is because the right half is always a mirror of the left half (with a possible middle digit for odd-length palindromes).
 
-Now we need to generate these palindromes, compare them to find the closest one, and handle all the edge cases correctly. We need to be careful about numbers at the boundaries (like 1, 10, 11, etc.) and make sure our solution works for all possible inputs within the given constraints.
+Now we need to generate these palindromes, compare them to find the closest one, and handle all the edge cases correctly. We need to be careful about numbers at the boundaries (like 1, 10, 11, etc.) and make sure our solution works for all possible inputs within the given constraints. This approach is better because it works for any number in our range, whether it's small like 11 or massive like 999,999,999,999,999,999. We're not generating all palindromes; we're smartly picking just a few candidates that are most likely to be the answer.
 
 
 # Approach
 
 
-1. Convert the input string to a long integer:
+**1. Convert the input string to a long integer:**
    ```
    number = parse_long(numberStr)
    ```
 
-2. Handle special cases for small numbers:
+**2. Handle special cases for small numbers:**
    ```
    if number <= 10:
        return string(number - 1)
    if number == 11:
        return "9"
    ```
-   These cases are handled separately because they don't follow the general pattern.
+   -  If the number is 1-10, the closest palindrome is always the previous number. For example, for 6, it's 5; for 10, it's 9.
+	-  If the number is 11, the closest palindrome is 9.
 
-3. Calculate the length of the input number and extract the left half:
+	We handle these separately because they don't follow the general pattern we'll use for larger numbers.
+
+**3. Calculate the length of the input number and extract the left half:**
    ```
    length = length(numberStr)
    leftHalf = parse_long(numberStr.substring(0, (length + 1) / 2))
    ```
+   For our main algorithm, we start by extracting the left half of our number. If the number has an odd number of digits, we include the middle digit in this left half.
+
+For example:
+- For "12345", the left half would be "123"
+- For "1234", the left half would be "12"
    We use (length + 1) / 2 to handle both odd and even length numbers correctly.
 
-4. Generate the five candidate palindromes:
-   ```
+**4. Generate the five candidate palindromes:**
+  ```
    candidates = new array of size 5
    candidates[0] = generatePalindrome(leftHalf - 1, length % 2 == 0)
    candidates[1] = generatePalindrome(leftHalf, length % 2 == 0)
@@ -75,9 +86,18 @@ Now we need to generate these palindromes, compare them to find the closest one,
    candidates[3] = 10^(length - 1) - 1
    candidates[4] = 10^length + 1
    ```
-   The generatePalindrome function (which we'll define later) creates a palindrome from the left half.
+   
+1. The palindrome formed by the left half as is
+2. The palindrome formed by decrementing the left half
+3. The palindrome formed by incrementing the left half
+4. The number with all 9's that has one digit less than our input
+5. The number with 1 followed by 0's and ending with 1, with one more digit than our input
 
-5. Find the nearest palindrome:
+To generate palindromes from the left half, we use a helper function. This function takes the left half, creates a palindrome from it, and handles both odd and even-length numbers correctly.
+   The generatePalindrome function (which we'll define later) creates a palindrome from the left half.
+   
+
+**5. Find the nearest palindrome:**
    ```
    nearestPalindrome = 0
    minDifference = MAX_LONG_VALUE
@@ -89,9 +109,11 @@ Now we need to generate these palindromes, compare them to find the closest one,
            minDifference = difference
            nearestPalindrome = candidate
    ```
-   This loop compares each candidate to the original number, keeping track of the closest palindrome. If there's a tie, it chooses the smaller one.
+   Once we have our candidates, we compare each of them to our original number. We're looking for the one with the smallest absolute difference from our original number.
 
-6. Return the result:
+If two palindromes have the same difference, we choose the smaller one, as per the problem requirements.
+
+**6. Return the result:**
    ```
    return string(nearestPalindrome)
    ```
