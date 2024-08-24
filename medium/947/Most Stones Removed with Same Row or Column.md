@@ -367,3 +367,94 @@ var removeStones = function(stones) {
 //https://leetcode.com/problems/most-stones-removed-with-same-row-or-column/submissions/1366536542/
 
 ```
+---
+### **Mathematical Proof**
+
+#### **1. Problem Recap**
+
+Given `n` stones on a 2D plane at integer coordinates, we need to determine the maximum number of stones that can be removed. A stone can be removed if it shares a row or column with at least one other stone.
+
+#### **2. Key Insight**
+
+The core insight is that the maximum number of stones that can be removed equals the total number of stones minus the number of connected components on the grid. 
+
+#### **3. Graph Representation**
+
+Consider the stones and their relationships as a graph:
+- **Nodes**: Each stone is a node.
+- **Edges**: There is an edge between two nodes if the corresponding stones share the same row or the same column.
+
+**Connected Component**: A connected component is a group of stones such that every stone in the group is connected directly or indirectly (via other stones) through shared rows or columns.
+
+#### **4. Lemma: Maximum Stones Removable from a Connected Component**
+
+**Lemma**: In a connected component of `k` stones, the maximum number of removable stones is `k - 1`.
+
+**Proof**:
+1. **Base Case**: If `k = 1` (a single stone), no stones can be removed.
+2. **Induction Step**: For `k > 1`:
+   - Start by picking any stone in the component. Since it's connected to at least one other stone, we can remove it.
+   - Move to the next stone and repeat the process.
+   - Continue until only one stone remains, which cannot be removed.
+   - Thus, in a component of `k` stones, we can remove `k - 1` stones.
+
+#### **5. Theorem: Maximum Removable Stones**
+
+The maximum number of removable stones $R$ is given by $R = |S| - C$, where:
+- $|S|$ is the total number of stones.
+- $C$ is the number of connected components.
+
+**Proof**:
+1. **Sum of Stones in All Components**:
+   - Let $k_1, k_2, \ldots, k_C$ be the number of stones in each of the $C$ connected components.
+   - The total number of stones is $|S| = k_1 + k_2 + \cdots + k_C$.
+   
+2. **Removable Stones in Each Component**:
+   - From the Lemma, in each component $i$, we can remove $k_i - 1$ stones.
+   - Therefore, the total number of removable stones is $R = \sum_{i=1}^{C} (k_i - 1)$.
+
+3. **Simplifying the Formula**:
+   - Expand the sum: $R = (k_1 - 1) + (k_2 - 1) + \cdots + (k_C - 1)$.
+   - This simplifies to $R = (k_1 + k_2 + \cdots + k_C) - C$.
+   - Since $|S| = k_1 + k_2 + \cdots + k_C$, we have $R = |S| - C$.
+
+This shows that the maximum number of stones that can be removed is the total number of stones minus the number of connected components.
+
+#### **6. Algorithm Implementation: Union-Find**
+
+The Union-Find (or Disjoint Set Union, DSU) algorithm efficiently tracks and merges connected components:
+
+1. **Initialization**: Start with each stone as its own component.
+2. **Union Operation**: For each stone, connect its row and column to merge components that share rows or columns.
+3. **Find Operation**: Identify the representative (root) of the component to which a stone belongs.
+4. **Final Count**: After processing all stones, the number of distinct components $C$ is determined. The maximum number of removable stones is $|S| - C$.
+
+#### **7. Induction Proof for Algorithm Correctness**
+
+**Base Case**: 
+- If there is 1 stone, $|S| = 1$ and $C = 1$. The formula gives $R = 1 - 1 = 0$, which is correct since the stone cannot be removed.
+
+**Induction Step**:
+- Assume the formula $R = |S| - C$ holds for $n$ stones.
+- Consider adding the $(n+1)$-th stone.
+
+**Case 1**: The new stone forms a new connected component.
+- Before: $R(n) = n - C$.
+- After: $R(n+1) = (n + 1) - (C + 1) = n - C = R(n)$.
+- The stone is isolated and cannot be removed, so the formula holds.
+
+**Case 2**: The new stone connects to an existing component.
+- Before: $R(n) = n - C$.
+- After: $R(n+1) = (n + 1) - C = R(n) + 1$.
+- The new stone can be removed, increasing the count, so the formula holds.
+
+By induction, the formula $R = |S| - C$ is valid for all $n$.
+
+#### **8. Complexity Analysis**
+
+- **Time Complexity**: $O(n \cdot \alpha(n))$, where $\alpha(n)$ is the inverse Ackermann function, effectively constant for practical purposes.
+- **Space Complexity**: $O(m)$, where $m$ is the range of coordinates, to store the Union-Find structure.
+
+#### **9. Conclusion**
+
+The proof combines graph theory (connected components) with the Union-Find algorithm to show that the maximum number of removable stones is given by $R = |S| - C$. This approach is both mathematically rigorous and computationally efficient, ensuring the solution is correct and optimal for large inputs.
