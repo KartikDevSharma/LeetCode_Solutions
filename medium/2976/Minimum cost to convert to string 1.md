@@ -1,198 +1,205 @@
-## Problem in Simpler Terms
-
-Imagine you have a word game where you need to change one word (let's call it the "source" word) into another word (the "target" word). Here are the rules:
-
-1. Both words have the same length.
-2. You can only change one letter at a time.
-3. Each letter change has a specific cost.
-4. You're given a list of allowed letter changes and their costs.
-5. You can use these changes as many times as you want.
-
-Your goal is to find the cheapest way to change the source word into the target word.
-
-Here's a breakdown of the key elements:
-
-1. `source` and `target`: These are the starting and ending words.
-2. `original` and `changed`: These lists show what letter changes are allowed.
-3. `cost`: This list shows how much each allowed change costs.
-
-For example:
-- If you're allowed to change 'a' to 'b' for a cost of 5
-- And 'b' to 'c' for a cost of 3
-- Then you could change 'a' to 'c' for a total cost of 8 (5 + 3)
-
-The tricky part is that sometimes it's cheaper to make multiple small changes rather than one big change. Your job is to figure out the cheapest overall path to change the source word into the target word.
-
-If it's impossible to change the source word into the target word using the allowed changes, you should return -1.
-
----
-
-
 
 # Intuition
 
-When first approaching this problem, we need to understand that we're essentially dealing with a graph problem. Each character in the alphabet can be thought of as a node in a graph, and the allowed character conversions represent the edges between these nodes. The cost of each conversion is the weight of the edge.
+We're given two strings, 'source' and 'target', both of equal length n $(1 ≤ n ≤ 10^5)$. These strings consist of lowercase English letters. Our task is to transform 'source' into 'target' using a series of character conversions. The conversions are defined by three arrays: 'original', 'changed', and 'cost', each of length m $(1 ≤ m ≤ 2000)$. For each index i, we can change the character original[i] to changed[i] at a cost of cost[i] $(1 ≤ cost[i] ≤ 10^6)$. The goal is to find the minimum total cost to perform this transformation, or return -1 if it's impossible.
 
-The core challenge is to find the cheapest way to transform the source string into the target string. This immediately brings to mind the concept of finding the shortest path in a weighted graph. However, we're not just finding a single path - we need to find the shortest path between every pair of characters, as we might need to transform any character into any other character.
+The large possible string length (up to 10^5) immediately rules out any brute-force approaches that might try all possible combinations of transformations. The number of possible transformations (up to 2000) is also significant, suggesting that we need an efficient way to represent and process these transformations. The fact that we're dealing with lowercase English letters (26 possibilities) is a key insight that we'll leverage in our solution.
 
-This realization leads us to consider algorithms for finding all-pairs shortest paths in a graph. The Floyd-Warshall algorithm is a perfect fit for this scenario, as it efficiently computes the shortest paths between all pairs of nodes in a weighted graph.
 
-# Approach
+At first i thought of using a depth-first search (DFS) approach The idea was to explore all possible transformation paths, keeping track of the minimum cost encountered. For each mismatched character between 'source' and 'target', we could recursively try all possible transformations, accumulating the cost as we go. However, its limitations were: 
 
-## 1. Building the Conversion Graph
+1. Time Complexity: With up to 10^5 characters to potentially transform, and up to 2000 possible transformations for each, the number of paths to explore would be astronomical. This would lead to a time complexity that's exponential in nature, far exceeding the time limits for the problem.
 
-The first step is to represent our problem as a graph. We'll use a 2D array (matrix) to represent this graph, where each cell [i][j] represents the cost of converting character i to character j.
+2. Redundant Calculations: We'd end up recalculating the cost of the same transformations multiple times, especially for recurring characters in the strings.
 
-Pseudo-code for this step:
+3. Indirect Transformations: The DFS approach might struggle to efficiently handle cases where the optimal transformation is indirect (e.g., 'a' -> 'b' -> 'c' being cheaper than a direct 'a' -> 'c').
+
+After Realizing the Graph Nature of the Problem: i thought we can model this as a graph problem. Each lowercase letter can be considered a node in a graph, and each possible transformation represents a directed edge with a weight equal to the transformation cost. 
+Now i started Considering Dijkstra's Algorithm: With the graph model in mind, Dijkstra's algorithm for finding the shortest path in a weighted graph seems like a natural fit. We could use it to find the minimum cost path from each character in 'source' to the corresponding character in 'target'. 
+
+However, there's a catch. We'd need to run Dijkstra's algorithm 26 times (once for each lowercase letter as the source) to precompute all possible transformation costs. While this would work, it feels somewhat inefficient, especially considering that we need the shortest paths between all pairs of characters, This is where the Floyd-Warshall algorithm comes into play, offering an elegant solution to our dilemma. Floyd-Warshall is an all-pairs shortest path algorithm, meaning it can find the shortest paths between all pairs of nodes in a single run. This is perfect for our scenario, as we need to know the minimum cost to transform any character into any other character.
+
+Floyd-Warshall can handle "indirect" transformations efficiently. For instance, if we need to transform 'a' to 'c', but there's no direct transformation (or the direct transformation is more expensive), Floyd-Warshall will automatically find the cheapest path, perhaps 'a' -> 'b' -> 'c', if that's the most efficient route.
+
+In short, by recognizing the graph nature of the problem and applying the Floyd-Warshall algorithm, we can transform a potentially complex and time-consuming string manipulation problem into a series of efficient matrix operations followed by a simple linear scan of the input strings. This insight allows us to solve the problem efficiently, even with large input sizes, while handling all the nuances of the possible transformations.
+
+Certainly! I'll provide a more detailed explanation of the approach, diving deeper into the logic and reasoning behind each step.
+
+## Approach
+
+Our solution to this string transformation problem can be broken down into three main steps:
+
+1. Building the Conversion Graph
+2. Optimizing Conversion Paths using Floyd-Warshall
+3. Computing the Total Conversion Cost
+
+
+### Step 1: Building the Conversion Graph
+
+The first crucial step is to construct a graph that represents all possible character transformations and their associated costs. This graph will be the foundation for our subsequent optimizations.
 
 ```
 function buildConversionGraph(original, changed, cost):
-    // Initialize graph with all edges set to infinity
-    graph = 2D array of size [CHAR_COUNT][CHAR_COUNT] filled with INF
-
-    // Set cost of converting a character to itself to 0
-    for i from 0 to CHAR_COUNT - 1:
-        graph[i][i] = 0
-
-    // Fill in the known conversion costs
-    for i from 0 to length of cost - 1:
-        from = index of original[i] in alphabet
-        to = index of changed[i] in alphabet
-        graph[from][to] = minimum of (graph[from][to], cost[i])
-
+    graph = new 2D array of size 26x26, initialized with INF (a very large number)
+    
+    for i from 0 to 25:
+        graph[i][i] = 0  // It costs nothing to 'transform' a letter to itself
+    
+    for i from 0 to length of cost:
+        from = original[i] - 'a'  // Convert character to 0-based index
+        to = changed[i] - 'a'
+        graph[from][to] = min(graph[from][to], cost[i])
+    
     return graph
 ```
 
-This function creates our initial graph representation. Here's a detailed breakdown of what's happening:
-
-1. We start by creating a 2D array filled with a very large value (INF). This represents that initially, we assume there's no direct way to convert any character to any other character.
-
-2. We then set the cost of converting a character to itself to 0. This is logical - it costs nothing to keep a character as is.
-
-3. Finally, we iterate through the given conversion rules (original, changed, and cost arrays). For each rule, we update our graph. The `from` character is represented by the row index, and the `to` character by the column index. We use the minimum of the current value and the new cost in case there are multiple ways to perform the same conversion.
-4. Now, why do we use `minimum of (graph[from][to], cost[i])` here? well, we might have multiple ways to change one letter to another. like, we might be told we can change 'a' to 'b' for 5 points, but later we're told we can do it for 3 points. we want to keep the cheaper option, so we use `minimum of (graph[from][to], cost[i])`.
-5. After all this, we end up with a grid that shows the cheapest way to directly change any letter to any other letter, based on the rules we were given.
-
-This step gives us a graph that represents all direct conversions we can make based on the given rules.
-
-**PS:** I've seen a lot of people getting confused with this, so let me explain:
-
-the reason we use graph[from][to] = Math.min(graph[from][to], cost[i]); instead of just graph[from][to] = cost[i]; is because there might be multiple ways to convert one character to another, with different costs. by using Math.min(), we're always keeping the lowest cost option for converting from one character to another.
-
-here's an example: let's say in our input we have:
-original = ['a', 'a']
-changed = ['b', 'b']
-cost = [5, 3]
-
-this means we have two ways to convert 'a' to 'b': one costs 5 and another costs 3. if we just used graph[from][to] = cost[i];, the cost of converting a to b would be set to 5 first and then overwritten with 3. but we want to keep the lower cost of 3.
-
-so by using math.min(graph[from][to], cost[i]) we make sure we always keep the lowest cost for each character conversion, even if there are multiple conversion options in the input.
 
 
-## 2. Optimizing Conversion Paths
+1. We use a 26x26 2D array to represent our graph. Why 26? Because there are 26 lowercase English letters, and each cell `graph[i][j]` will represent the cost of transforming the i-th letter to the j-th letter.
 
-Now that we have our initial graph, we need to find the cheapest way to convert any character to any other character, even if it requires multiple steps. This is where the Floyd-Warshall algorithm comes in.
+2. We initialize all cells with INF (infinity). This is crucial because:
+   a) It represents the absence of a direct transformation path.
+   b) It allows the Floyd-Warshall algorithm to work correctly by always choosing the smaller cost when comparing paths.
 
-Pseudo-code for this step:
+3. We set the diagonal elements (graph[i][i]) to 0. This represents the fact that keeping a letter unchanged costs nothing.
+
+4. We then iterate through the provided transformations (original, changed, cost arrays) and update our graph. The `min` function is used here because there might be multiple ways to transform one letter to another, and we always want the cheapest one.
+
+5. By subtracting 'a' from the characters, we convert them to 0-based indices (e.g., 'a' becomes 0, 'b' becomes 1, etc.), which allows us to use them directly as array indices.
+
+### Step 2: Optimizing Conversion Paths using Floyd-Warshall
+
+Now that we have our initial graph, we apply the Floyd-Warshall algorithm to find the shortest (least costly) paths between all pairs of characters:
 
 ```
 function optimizeConversionPaths(graph):
-    for k from 0 to CHAR_COUNT - 1:
-        for i from 0 to CHAR_COUNT - 1:
-            if graph[i][k] < INF:
-                for j from 0 to CHAR_COUNT - 1:
-                    if graph[k][j] < INF:
-                        graph[i][j] = minimum of (graph[i][j], graph[i][k] + graph[k][j])
+    for k from 0 to 25:
+        for i from 0 to 25:
+            for j from 0 to 25:
+                if graph[i][k] < INF and graph[k][j] < INF:
+                    graph[i][j] = min(graph[i][j], graph[i][k] + graph[k][j])
 ```
 
-This is the heart of the Floyd-Warshall algorithm. Here's what's happening:
 
-1. We iterate through all possible intermediate nodes (k).
 
-2. For each pair of nodes (i and j), we check if going through k gives us a cheaper path than the one we currently know.
+1. The Floyd-Warshall algorithm works by considering each vertex as an intermediate point in a path between two other vertices. It does this for all possible combinations of vertices.
 
-3. If we find a cheaper path, we update our graph.
+2. The outer loop (k) represents the current intermediate vertex being considered.
 
-The brilliance of this algorithm is that it considers all possible paths between all pairs of nodes. After this step, graph[i][j] will contain the cost of the cheapest possible way to convert character i to character j, even if it requires multiple intermediate steps.
+3. The inner loops (i and j) represent the start and end vertices of a path we're trying to optimize.
 
-A key optimization in our implementation is the check `if graph[i][k] < INF` and `if graph[k][j] < INF`. This prevents unnecessary calculations when there's no path between nodes, significantly speeding up the algorithm for sparse graphs.
+4. The key operation is the comparison and update:
+   `graph[i][j] = min(graph[i][j], graph[i][k] + graph[k][j])`
+   This checks if going from i to j through k is cheaper than the current known path from i to j.
 
-## 3. Computing the Total Conversion Cost
+5. The condition `graph[i][k] < INF and graph[k][j] < INF` ensures that we only consider valid paths. If either segment of the path (i to k or k to j) is impossible (INF), we don't update graph[i][j].
 
-With our fully optimized conversion graph, we can now calculate the cost of converting the source string to the target string.
+6. After this process, `graph[i][j]` will contain the cost of the cheapest path from character i to character j, possibly through other characters.
 
-Pseudo-code for this step:
+7. This step is crucial for finding indirect transformations that might be cheaper than direct ones. For example, it might find that 'a' -> 'b' -> 'c' is cheaper than a direct 'a' -> 'c'.
+
+### Step 3: Computing the Total Conversion Cost
+
+With our fully optimized graph, we can now efficiently compute the total cost of transforming the source string to the target string:
 
 ```
 function computeTotalConversionCost(source, target, graph):
     totalCost = 0
-    for i from 0 to length of source - 1:
-        sourceChar = index of source[i] in alphabet
-        targetChar = index of target[i] in alphabet
+    for i from 0 to length of source:
+        sourceChar = source[i] - 'a'
+        targetChar = target[i] - 'a'
         if sourceChar != targetChar:
             if graph[sourceChar][targetChar] == INF:
-                return -1  // Conversion is impossible
+                return -1  // Impossible transformation
             totalCost += graph[sourceChar][targetChar]
     return totalCost
 ```
 
-Here's what this function does:
 
-1. We iterate through each position in the source and target strings simultaneously.
 
-2. If the characters at the current position are different, we need to perform a conversion.
+1. We iterate through the characters of the source and target strings simultaneously.
 
-3. We look up the cost of this conversion in our optimized graph.
+2. For each position, we check if the characters are different. If they are the same, no transformation is needed, so we move to the next position.
 
-4. If the cost is INF, it means there's no way to perform this conversion, so we return -1 to indicate that the overall conversion is impossible.
+3. If the characters differ, we look up the transformation cost in our optimized graph.
 
-5. Otherwise, we add the cost to our total.
+4. If the cost is INF, it means there's no way to transform the source character to the target character, so we immediately return -1 as the problem is unsolvable.
 
-6. After checking all positions, if we haven't returned -1, we return the total cost.
+5. Otherwise, we add the transformation cost to our running total.
 
-This approach ensures that we're always using the cheapest possible way to convert each character, even if it involves multiple steps.
+6. After processing all characters, if we haven't returned -1, we return the total cost, which is guaranteed to be the minimum possible cost due to our use of Floyd-Warshall.
 
 
 
-# Complexity Analysis
+The main function ties all these steps together:
 
-## Time Complexity
+```
+function minimumCost(source, target, original, changed, cost):
+    conversionGraph = buildConversionGraph(original, changed, cost)
+    optimizeConversionPaths(conversionGraph)
+    return computeTotalConversionCost(source, target, conversionGraph)
+```
 
-The time complexity of this solution is dominated by the Floyd-Warshall algorithm used in the `optimizeConversionPaths` function.
+This approach is efficient  because: It precomputes all possible transformation costs, including indirect transformations, in a single pass using Floyd-Warshall. It reduces the problem of finding the optimal sequence of transformations to a series of simple lookups. It handles the case of impossible transformations gracefully. It works efficiently even for large input strings, as the main computational work is done on the 26x26 graph, regardless of the input size.
 
-- Building the initial graph takes O(CHAR_COUNT^2 + N) time, where N is the number of given conversion rules. This is because we initialize a CHAR_COUNT x CHAR_COUNT matrix and then process N rules.
-
-- The Floyd-Warshall algorithm in `optimizeConversionPaths` has a time complexity of O(CHAR_COUNT^3). This comes from the three nested loops, each iterating CHAR_COUNT times.
-
-- Computing the total cost takes O(L) time, where L is the length of the source/target strings.
-
-Since CHAR_COUNT is a constant (26 for lowercase English letters), the O(CHAR_COUNT^3) term is actually O(1) in the context of this problem. Therefore, the overall time complexity is **O(N + L)**.
-
-**IMPORTANT:** 
-It's worth noting that the constant factor here (26^3 = 17,576) is quite large. For very small inputs, this could be slower than a more straightforward approach. But for larger inputs, especially when N or L is large, this approach becomes very efficient.
-In practice, this means:
-1. For small N and L, the constant time from the Floyd-Warshall part might dominate.
-2. For larger N or L, the O(N + L) part will dominate, making the algorithm very efficient.
-
-## Space Complexity
-
-The space complexity is determined by the size of our graph:
-
-- We use a 2D array of size CHAR_COUNT x CHAR_COUNT to represent our graph.
-- Again, since CHAR_COUNT is a constant (26), this is actually O(1) space.
-
-We don't use any other data structures that grow with the input size, so the overall space complexity remains **O(1)**.
-
-This constant space usage is a significant advantage of this approach, especially for large inputs. No matter how long the strings are or how many conversion rules are given, we always use the same amount of memory.
+### Complexity 
 
 
+
+**Time Complexity: O(26³ + n + m)**
+
+Let's break this down step by step:
+
+1. Building the Conversion Graph: O(m)
+   - We iterate through the 'original', 'changed', and 'cost' arrays once.
+   - m is the length of these arrays (which are all the same length).
+   - For each element, we perform constant time operations (array access and comparison).
+   - Therefore, this step takes O(m) time.
+
+2. Optimizing Conversion Paths (Floyd-Warshall Algorithm): O(26³)
+   - This is the core of our algorithm and deserves special attention.
+   - We have three nested loops, each iterating from 0 to 25 (representing a-z).
+   - The total number of iterations is thus 26 * 26 * 26 = 17,576.
+   - Inside the innermost loop, we perform constant time operations.
+   - While 17,576 is a large number, it's constant regardless of input size.
+   - Therefore, we consider this step O(1) in terms of input size, but it's more accurately O(26³).
+
+3. Computing Total Conversion Cost: O(n)
+   - We iterate through the 'source' and 'target' strings once.
+   - n is the length of these strings (which are the same length).
+   - For each character, we perform constant time operations (array access and addition).
+   - Therefore, this step takes O(n) time.
+
+Combining these steps, we get O(m) + O(26³) + O(n).
+
+In Big O notation, we typically drop constants, but in this case, 26³ is a significant factor. It's worth noting that for very small inputs (where n and m are less than 17,576), the Floyd-Warshall step will dominate the runtime. However, as n or m grow larger, they will eventually overtake 26³.
+
+**Space Complexity: O(1)**
+
+The space complexity is constant, but let's break it down for a complete understanding:
+
+1. Conversion Graph: O(26²)
+   - We use a 26x26 2D array to represent our graph.
+   - This requires 26 * 26 = 676 integer elements.
+   - Regardless of input size, this remains constant.
+
+2. Other Variables:
+   - We use a few additional variables (like loop counters and the total cost),
+     but these are negligible compared to the graph.
+
+Even though we're using 676 integers, which is a significant amount of memory, it's constant with respect to the input size. Whether our input strings are 10 characters or 10 million characters long, we always use the same amount of extra space.
+
+In Big O notation, we express this as O(1) because the space usage doesn't grow with input size.
+
+It's worth noting that while we consider this O(1) space, in practical implementations, this constant factor (676 integers) might be significant for very small inputs or in memory-constrained environments.
+
+our solution trades a constant (but non-trivial) amount of time and space complexity to precompute all possible character transformations, which then allows for efficient lookup during the string comparison phase. This tradeoff is particularly beneficial for longer input strings or when there are many possible character transformations.
 
 
 
 ---
 
 # Code
-Java
 ```Java []
 class Solution {
     private static final int CHAR_COUNT = 26;
@@ -250,12 +257,7 @@ class Solution {
     }
 }
 ```
-C++
 ```C++ []
-#include <vector>
-#include <string>
-#include <algorithm>
-
 class Solution {
 private:
     static constexpr int CHAR_COUNT = 26;
@@ -312,7 +314,6 @@ public:
 };
 
 ```
-Python
 ```Python []
 
 class Solution:
@@ -353,7 +354,6 @@ class Solution:
                 totalCost += graph[sourceChar][targetChar]
         return totalCost
 ```
-JavaScript
 ```JavaScript []
 /**
  * @param {string} source
@@ -415,13 +415,7 @@ var minimumCost = function(source, target, original, changed, cost) {
 };
 
 ```
-Go
 ```Go []
-package main
-
-import (
-    "math"
-)
 
 const CHAR_COUNT = 26
 const INF = math.MaxInt32 / 2
@@ -483,7 +477,6 @@ func computeTotalConversionCost(source string, target string, graph [][]int) int
 }
 
 ```
-Rust
 ```Rust []
 
 use std::cmp::min;
@@ -563,117 +556,205 @@ impl Solution {
 ```
 ---
 
-## DRY RUN
 
+**Example 1:**
+>Input: source = "abcd", target = "acbe", original = ["a","b","c","c","e","d"], changed = ["b","c","b","e","b","e"], cost = [2,5,5,1,2,20]
 
-**Example:**
-- source = "abc"
-- target = "ade"
-- original = ['a', 'b', 'c', 'd']
-- changed = ['b', 'c', 'd', 'e']
-- cost = [1, 2, 3, 4]
+    Step 1: Build Conversion Graph
 
-Let's go through the solution step by step:
-
-**1. Building the Conversion Graph:**
-
-
-
-```java
-int[][] buildConversionGraph(char[] original, char[] changed, int[] cost) {
-    int[][] graph = new int[CHAR_COUNT][CHAR_COUNT];
-    for (int[] row : graph) {
-        Arrays.fill(row, INF);
-    }
-    for (int i = 0; i < CHAR_COUNT; i++) {
-        graph[i][i] = 0;
-    }
-    for (int i = 0; i < cost.length; i++) {
-        int from = original[i] - 'a';
-        int to = changed[i] - 'a';
-        graph[from][to] = Math.min(graph[from][to], cost[i]);
-    }
-    return graph;
-}
-
+    Initial graph (showing only relevant entries):
+```
+   a  b  c  d  e
+a  0  2  ∞  ∞  ∞
+b  ∞  0  5  ∞  ∞
+c  ∞  5  0  ∞  1
+d  ∞  ∞  ∞  0 20
+e  ∞  2  ∞  ∞  0
 ```
 
-Let's walk through this step:
+    Step 2: Optimize Conversion Paths (Floyd-Warshall)
 
-a. Initialize a 26x26 matrix with INF (infinity) values.
-b. Set the diagonal (converting a character to itself) to 0.
-c. Fill in the known conversion costs:
-   - 'a' to 'b': cost 1
-   - 'b' to 'c': cost 2
-   - 'c' to 'd': cost 3
-   - 'd' to 'e': cost 4
-
-The resulting graph would look like this (showing only the relevant part):
-
+    Optimized graph (showing only relevant entries):
 ```
-    a   b   c   d   e
-a   0   1   INF INF INF
-b   INF 0   2   INF INF
-c   INF INF 0   3   INF
-d   INF INF INF 0   4
-e   INF INF INF INF 0
+   a  b  c  d  e
+a  0  2  7  ∞  8
+b  ∞  0  5  ∞  6
+c  ∞  3  0  ∞  1
+d  ∞  22 25  0 20
+e  ∞  2  7  ∞  0
 ```
 
-**2. Optimizing Conversion Paths:**
+    Step 3: Compute Total Conversion Cost
 
+| Index | Source | Target | Transformation | Cost |
+|-------|--------|--------|----------------|------|
+| 0     | a      | a      | None           | 0    |
+| 1     | b      | c      | b -> c         | 5    |
+| 2     | c      | b      | c -> b         | 3    |
+| 3     | d      | e      | d -> e         | 20   |
 
+Total Cost: 0 + 5 + 3 + 20 = 28
 
-```java
-void optimizeConversionPaths(int[][] graph) {
-    for (int k = 0; k < CHAR_COUNT; k++) {
-        for (int i = 0; i < CHAR_COUNT; i++) {
-            if (graph[i][k] < INF) {
-                for (int j = 0; j < CHAR_COUNT; j++) {
-                    if (graph[k][j] < INF) {
-                        graph[i][j] = Math.min(graph[i][j], graph[i][k] + graph[k][j]);
-                    }
-                }
-            }
-        }
-    }
-}
+Output: 28 
 
+**Example 2:**
+>Input: source = "aaaa", target = "bbbb", original = ["a","c"], changed = ["c","b"], cost = [1,2]
+
+    Step 1: Build Conversion Graph
+
+    Initial graph (showing only relevant entries):
+```
+   a  b  c
+a  0  ∞  1
+b  ∞  0  ∞
+c  ∞  2  0
 ```
 
-This step applies the Floyd-Warshall algorithm to find the shortest path between all pairs of characters. Let's see how it affects our graph:
+    Step 2: Optimize Conversion Paths (Floyd-Warshall)
 
-a. For k = 0 (a), no changes as 'a' doesn't provide any new shortest paths.
-b. For k = 1 (b), we can now go from 'a' to 'c' through 'b':
-   - 'a' to 'c': min(INF, 1 + 2) = 3
-c. For k = 2 (c), we can go from 'a' to 'd' and 'b' to 'd':
-   - 'a' to 'd': min(INF, 3 + 3) = 6
-   - 'b' to 'd': min(INF, 2 + 3) = 5
-d. For k = 3 (d), we can reach 'e' from 'a', 'b', and 'c':
-   - 'a' to 'e': min(INF, 6 + 4) = 10
-   - 'b' to 'e': min(INF, 5 + 4) = 9
-   - 'c' to 'e': min(INF, 3 + 4) = 7
-
-After optimization, our graph looks like this:
-
+    Optimized graph (showing only relevant entries):
 ```
-    a   b   c   d   e
-a   0   1   3   6   10
-b   INF 0   2   5   9
-c   INF INF 0   3   7
-d   INF INF INF 0   4
-e   INF INF INF INF 0
+   a  b  c
+a  0  3  1
+b  ∞  0  ∞
+c  ∞  2  0
 ```
 
-**3. Computing the Total Conversion Cost:**
+Step 3: Compute Total Conversion Cost
+
+| Index | Source | Target | Transformation | Cost |
+|-------|--------|--------|----------------|------|
+| 0     | a      | b      | a -> c -> b    | 3    |
+| 1     | a      | b      | a -> c -> b    | 3    |
+| 2     | a      | b      | a -> c -> b    | 3    |
+| 3     | a      | b      | a -> c -> b    | 3    |
+
+Total Cost: 3 + 3 + 3 + 3 = 12
+
+Output: 12
+
+**Example 3:**
+>Input: source = "abcd", target = "abce", original = ["a"], changed = ["e"], cost = [10000]
+
+    Step 1: Build Conversion Graph
+
+    Initial graph (showing only relevant entries):
+```
+   a  b  c  d  e
+a  0  ∞  ∞  ∞ 10000
+b  ∞  0  ∞  ∞  ∞
+c  ∞  ∞  0  ∞  ∞
+d  ∞  ∞  ∞  0  ∞
+e  ∞  ∞  ∞  ∞  0
+```
+
+    Step 2: Optimize Conversion Paths (Floyd-Warshall)
+
+    Optimized graph (no changes, as there are no intermediate paths):
+```
+   a  b  c  d  e
+a  0  ∞  ∞  ∞ 10000
+b  ∞  0  ∞  ∞  ∞
+c  ∞  ∞  0  ∞  ∞
+d  ∞  ∞  ∞  0  ∞
+e  ∞  ∞  ∞  ∞  0
+```
+
+    Step 3: Compute Total Conversion Cost
+
+| Index | Source | Target | Transformation | Cost |
+|-------|--------|--------|----------------|------|
+| 0     | a      | a      | None           | 0    |
+| 1     | b      | b      | None           | 0    |
+| 2     | c      | c      | None           | 0    |
+| 3     | d      | e      | Impossible     | ∞    |
+
+Since there's no path from 'd' to 'e', the transformation is impossible.
+
+Output: -1 
+
+---
+## Proof, Sort of
+### 1. **Graph Construction (Building the Conversion Graph)**
+
+### **Problem Restatement**
+Given:
+- Two strings `source` and `target` of length `n`, consisting of lowercase English letters.
+- Three arrays: `original`, `changed`, and `cost`, where `original[i]` can be converted to `changed[i]` at a cost of `cost[i]`.
+
+The task is to find the minimum cost to transform `source` into `target` using any number of the provided operations. If it is impossible to do so, return `-1`.
+
+### **Key Concepts and Definitions**
+- **Graph Representation**: We can represent the problem as a graph where each node corresponds to a character ('a' to 'z'). There is an edge from node `i` to node `j` if there is a direct conversion available from the character `i` to `j` with some cost.
+
+- **Distance Matrix**: We'll use a matrix `d` where `d[i][j]` represents the minimum cost to convert character `i` to character `j`. Initially, `d[i][j]` is set to infinity (`INF`) if no direct conversion is given, and `d[i][i]` is set to `0` (since converting a character to itself costs nothing).
+#### Explanation:
+You create a graph where each character in the alphabet (26 lowercase English letters) is a node. An edge from node `u` to node `v` exists if there's a direct conversion possible from character `u` to character `v` with some cost.
+
+Let `G` be a graph where:
+- Each vertex represents a character from 'a' to 'z'.
+- There is a directed edge from vertex `i` to vertex `j` if it's possible to convert character `i` to character `j` at some cost.
+
+Mathematically:
+- The adjacency matrix `graph[i][j]` represents the minimum cost to convert character `i` to character `j`.
+- If there are multiple edges between two vertices (e.g., multiple ways to convert `i` to `j`), you keep the one with the minimum cost.
+
+#### Initialization:
+You initialize the matrix such that:
+- `graph[i][i] = 0` (since converting a character to itself has no cost).
+- `graph[i][j]` is initialized to infinity (or a very large value) to indicate that no direct conversion is possible initially.
+  
+For every valid conversion pair `(original[k], changed[k])` with a corresponding cost `cost[k]`, you update the matrix:
+
+${graph}[original[k] - 'a'][changed[k] - 'a'] = \min(\text{graph}[original[k] - 'a'][changed[k] - 'a'], cost[k])$
+
+This initialization sets up the direct transformations between characters with the minimum cost among possibly multiple transformations.
+
+### 2. **Optimizing Conversion Paths (Floyd-Warshall Algorithm)**
+
+#### Explanation:
+You apply the Floyd-Warshall algorithm to find the shortest paths between all pairs of vertices in the graph. This algorithm runs in \(O(n^3)\) time, where `n` is the number of vertices (in this case, `n = 26`).
+
+For every pair of vertices `(i, j)`, you check if a shorter path exists through an intermediate vertex `k`:
+
+${graph}[i][j] = \min(\text{graph}[i][j], \text{graph}[i][k] + \text{graph}[k][j])$
 
 
+#### **Proof of Correctness:**
+- **Base Case (No intermediate characters):** Initially, `d[i][j]` is either the direct cost from `i` to `j` or `INF` if no direct conversion exists. This forms the base of our induction.
+  
+- **Inductive Step (Considering intermediate characters):** Assume that for all pairs `(i, j)` and all intermediates `k < m`, the matrix `d[i][j]` correctly represents the minimum conversion cost. Now, consider introducing the character `m` as an intermediate. The value `d[i][j]` is updated to consider paths that go through `m`. By the properties of the Floyd-Warshall algorithm, if a shorter path exists via `m`, it will be found; otherwise, the current shortest path remains.
 
-Now we compare the source and target strings character by character:
+- **Conclusion:** After considering all possible intermediate characters, `d[i][j]` will contain the minimum cost to convert character `i` to character `j` using any combination of the given transformations.
 
-a. 'a' to 'a': No change needed, cost 0
-b. 'b' to 'd': Cost is 5 (from our optimized graph)
-c. 'c' to 'e': Cost is 7 (from our optimized graph)
+### 3. **Computing the Total Conversion Cost**
 
-Total cost: 0 + 5 + 7 = 12
+#### Explanation:
+After constructing the optimized conversion graph, you can calculate the total cost to convert the `source` string to the `target` string.
 
-Therefore, the minimum cost to convert "abc" to "ade" is 12.
+For each character `i` in the `source` string:
+- Let `s = source[i]` and `t = target[i]`.
+- If `s == t`, no conversion is needed, and the cost is `0`.
+- If `s != t`, the cost to convert `s` to `t` is given by `graph[s][t]`.
+
+If `graph[s][t]` equals infinity (or the initial large value), it means it's impossible to convert `s` to `t` through any sequence of allowed conversions, and hence you return `-1`.
+
+#### Mathematical Formulation:
+The total cost $C$ to convert the entire string is:
+
+${Total Cost} = \sum_{i=0}^{n-1} d[\text{source}[i] - 'a'][\text{target}[i] - 'a']$
+
+If for any `i`,  $d[{source}[i] - 'a'][{target}[i] - 'a']$ is `INF`, return `-1`.
+
+
+### 4. **Complexity Analysis**
+
+- **Time Complexity:**
+  - Building the graph takes \( O(k) \) where \( k \) is the length of the `cost` array.
+  - The Floyd-Warshall algorithm takes \( O(26^3) \), which is a constant operation since 26 is a fixed number.
+  - Computing the total conversion cost takes \( O(n) \), where `n` is the length of the `source` string.
+
+- **Space Complexity:**
+  - The space complexity is \( O(26^2) \) for the graph, which is again constant since the alphabet size is fixed.
+
+
