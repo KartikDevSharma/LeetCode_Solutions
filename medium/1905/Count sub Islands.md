@@ -8,7 +8,7 @@ The concept of an island in this context is important to understand. An island i
 
 A sub-island is an island in grid2 that's entirely contained within an island in grid1. It's like finding a mini-island that perfectly fits inside a larger island in our first archipelago(group of islands). To be a sub-island, every single land cell of the island in grid2 must overlap to a land cell in grid1. If even one cell of the grid2 island overlaps with water in grid1,you can not call it as a sub-island. The constraints makes it very clear that  With grids potentially as large as 500x500, we're looking at up to 250,000 cells to process. This size rules out any brute force approaches that might work for any smaller grids. Moreover, the problem asks for the count of sub-islands, not just to identify them. This means we need a way to not only detect sub-islands but also to count them uniquely, ensuring we don't double-count islands that might be connected in complex ways.
 
-Try to asnwer these in your head 
+Try to think of these 
 	 
 > How do we efficiently determine which cells form an island? How do we efficiently identify islands in `grid2`? Once we've identified islands in `grid2`, how do we check if they're contained within islands in `grid1`?How can we effectively compare islands between grid1 and grid2? How can we ensure we count each sub-island only once?With potentially large grids, how do we ensure our solution scales well?
 
@@ -290,8 +290,7 @@ The $O(m * n)$ terms dominate, so we can simplify to $O(m * n)$.
 
 ### Code
 
-
-```Java [] 
+```Java []
 class Solution {
     private int[] islandRoot;
     private byte[] islandStatus; // 0: unvisited, 1: valid sub-island, 2: invalid sub-island
@@ -490,10 +489,218 @@ class Solution:
             self.island_root[root_y] = root_x
 ```
 
+```Go []
+func countSubIslands(grid1 [][]int, grid2 [][]int) int {
+    numRows, numCols := len(grid2), len(grid2[0])
+    totalCells := numRows * numCols
+    islandRoot := make([]int, totalCells)
+    islandStatus := make([]byte, totalCells)
+
+    // Initialize islandRoot array
+    for i := 0; i < totalCells; i++ {
+        islandRoot[i] = i
+    }
+
+    // Union islands in grid2
+    for row := 0; row < numRows; row++ {
+        for col := 0; col < numCols; col++ {
+            if grid2[row][col] == 1 {
+                currentIndex := row * numCols + col
+                if col+1 < numCols && grid2[row][col+1] == 1 {
+                    unionIslands(islandRoot, currentIndex, currentIndex+1)
+                }
+                if row+1 < numRows && grid2[row+1][col] == 1 {
+                    unionIslands(islandRoot, currentIndex, currentIndex+numCols)
+                }
+            }
+        }
+    }
+
+    // Mark invalid sub-islands
+    for row := 0; row < numRows; row++ {
+        for col := 0; col < numCols; col++ {
+            if grid2[row][col] == 1 && grid1[row][col] == 0 {
+                rootIndex := findIslandRoot(islandRoot, row*numCols+col)
+                islandStatus[rootIndex] = 2 // Mark as invalid sub-island
+            }
+        }
+    }
+
+    // Count valid sub-islands
+    subIslandCount := 0
+    for row := 0; row < numRows; row++ {
+        for col := 0; col < numCols; col++ {
+            if grid2[row][col] == 1 {
+                rootIndex := findIslandRoot(islandRoot, row*numCols+col)
+                if islandStatus[rootIndex] == 0 {
+                    subIslandCount++
+                    islandStatus[rootIndex] = 1 // Mark as counted
+                }
+            }
+        }
+    }
+
+    return subIslandCount
+}
+
+func findIslandRoot(islandRoot []int, x int) int {
+    if islandRoot[x] != x {
+        islandRoot[x] = findIslandRoot(islandRoot, islandRoot[x]) // Path compression
+    }
+    return islandRoot[x]
+}
+
+func unionIslands(islandRoot []int, x, y int) {
+    rootX := findIslandRoot(islandRoot, x)
+    rootY := findIslandRoot(islandRoot, y)
+    if rootX != rootY {
+        islandRoot[rootY] = rootX
+    }
+}
+
+```
+```Rust []
+impl Solution {
+    pub fn count_sub_islands(grid1: Vec<Vec<i32>>, grid2: Vec<Vec<i32>>) -> i32 {
+        let num_rows = grid2.len();
+        let num_cols = grid2[0].len();
+        let total_cells = num_rows * num_cols;
+        let mut island_root = (0..total_cells).collect::<Vec<_>>();
+        let mut island_status = vec![0u8; total_cells];
+
+        // Union islands in grid2
+        for row in 0..num_rows {
+            for col in 0..num_cols {
+                if grid2[row][col] == 1 {
+                    let current_index = row * num_cols + col;
+                    if col + 1 < num_cols && grid2[row][col + 1] == 1 {
+                        Solution::union_islands(&mut island_root, current_index, current_index + 1);
+                    }
+                    if row + 1 < num_rows && grid2[row + 1][col] == 1 {
+                        Solution::union_islands(&mut island_root, current_index, current_index + num_cols);
+                    }
+                }
+            }
+        }
+
+        // Mark invalid sub-islands
+        for row in 0..num_rows {
+            for col in 0..num_cols {
+                if grid2[row][col] == 1 && grid1[row][col] == 0 {
+                    let root_index = Solution::find_island_root(&mut island_root, row * num_cols + col);
+                    island_status[root_index] = 2; // Mark as invalid sub-island
+                }
+            }
+        }
+
+        // Count valid sub-islands
+        let mut sub_island_count = 0;
+        for row in 0..num_rows {
+            for col in 0..num_cols {
+                if grid2[row][col] == 1 {
+                    let root_index = Solution::find_island_root(&mut island_root, row * num_cols + col);
+                    if island_status[root_index] == 0 {
+                        sub_island_count += 1;
+                        island_status[root_index] = 1; // Mark as counted
+                    }
+                }
+            }
+        }
+
+        sub_island_count
+    }
+
+    fn find_island_root(island_root: &mut Vec<usize>, x: usize) -> usize {
+        if island_root[x] != x {
+            island_root[x] = Solution::find_island_root(island_root, island_root[x]); // Path compression
+        }
+        island_root[x]
+    }
+
+    fn union_islands(island_root: &mut Vec<usize>, x: usize, y: usize) {
+        let root_x = Solution::find_island_root(island_root, x);
+        let root_y = Solution::find_island_root(island_root, y);
+        if root_x != root_y {
+            island_root[root_y] = root_x;
+        }
+    }
+}
+
+
+```
+```JavaScript []
+
+var countSubIslands = function(grid1, grid2) {
+    const numRows = grid2.length;
+    const numCols = grid2[0].length;
+    const totalCells = numRows * numCols;
+    const islandRoot = Array.from({ length: totalCells }, (_, i) => i);
+    const islandStatus = new Uint8Array(totalCells);
+
+    // Union islands in grid2
+    for (let row = 0; row < numRows; row++) {
+        for (let col = 0; col < numCols; col++) {
+            if (grid2[row][col] === 1) {
+                const currentIndex = row * numCols + col;
+                if (col + 1 < numCols && grid2[row][col + 1] === 1) {
+                    unionIslands(islandRoot, currentIndex, currentIndex + 1);
+                }
+                if (row + 1 < numRows && grid2[row + 1][col] === 1) {
+                    unionIslands(islandRoot, currentIndex, currentIndex + numCols);
+                }
+            }
+        }
+    }
+
+    // Mark invalid sub-islands
+    for (let row = 0; row < numRows; row++) {
+        for (let col = 0; col < numCols; col++) {
+            if (grid2[row][col] === 1 && grid1[row][col] === 0) {
+                const rootIndex = findIslandRoot(islandRoot, row * numCols + col);
+                islandStatus[rootIndex] = 2; // Mark as invalid sub-island
+            }
+        }
+    }
+
+    // Count valid sub-islands
+    let subIslandCount = 0;
+    for (let row = 0; row < numRows; row++) {
+        for (let col = 0; col < numCols; col++) {
+            if (grid2[row][col] === 1) {
+                const rootIndex = findIslandRoot(islandRoot, row * numCols + col);
+                if (islandStatus[rootIndex] === 0) {
+                    subIslandCount++;
+                    islandStatus[rootIndex] = 1; // Mark as counted
+                }
+            }
+        }
+    }
+
+    return subIslandCount;
+};
+
+function findIslandRoot(islandRoot, x) {
+    if (islandRoot[x] !== x) {
+        islandRoot[x] = findIslandRoot(islandRoot, islandRoot[x]); // Path compression
+    }
+    return islandRoot[x];
+}
+
+function unionIslands(islandRoot, x, y) {
+    const rootX = findIslandRoot(islandRoot, x);
+    const rootY = findIslandRoot(islandRoot, y);
+    if (rootX !== rootY) {
+        islandRoot[rootY] = rootX;
+    }
+}
+
+```
+
 
 ---
   
 ## Mathematical Justification
+*AI Justification you should skip this one*
 ### Problem Recap
 
   
