@@ -1,3 +1,57 @@
+### Intuition
+The problem presents us with a grid-based world where a robot must move and turn according to specific rules. Simply put, this is a problem of spatial reasoning and pattern recognition.
+
+To begin, we need to understand what the question is really asking. We're dealing with a rectangular grid where the robot starts in the bottom-left corner, facing east. The robot can move forward and turn left when it hits a boundary. Our task is to track its position and orientation after a series of movements.
+
+The constraints given are improtant. The grid size is limited (2 <= width, height <= 100), which means we're not dealing with an infinitely large space. The number of steps per move can be quite large (up to 10^5), and we might have to handle up to 10^4 calls to our methods. These constraints hint that a naive simulation approach might not be efficient enough.
+
+As we start to think about solutions, a few key observations come to mind:
+
+>1. The robot's movement forms a predictable pattern around the perimeter of the grid.
+>2. After a certain number of steps, the robot's position and direction will repeat.
+>3. The total perimeter of the grid is a crucial value in understanding the robot's behavior.
+
+Initially, we might consider a straightforward simulation approach. We could maintain the robot's current position and direction, updating them step-by-step as we process each movement instruction. This would work, but it would be inefficient for large numbers of steps. We'd essentially be recreating the entire path of the robot, even when we only care about its final position.
+
+But we don't need to simulate every single step. Instead, we can think about the robot's movement in terms of cycles around the perimeter of the grid.
+
+Picture the robot's path: it moves east along the bottom edge, then north up the right edge, west across the top edge, and finally south down the left edge before starting over. This forms a rectangle that exactly matches the perimeter of our grid.
+
+Now, let's consider what happens when we ask the robot to take a large number of steps. It might complete several full cycles around the grid, plus some partial distance into the next cycle. This observation is important because it means we can break down any number of steps into:
+>1. Complete cycles around the perimeter
+>2. Remaining steps into the next incomplete cycle
+
+This insight allows us to make a significant optimization. Instead of simulating every step, we can use modular arithmetic to immediately calculate the robot's position after any number of steps.
+
+Let's define the perimeter of the grid as P = 2 * (width + height - 2). This represents one complete cycle of the robot's movement. For any given number of steps S, we can calculate:
+- Complete cycles: S / P (integer division)
+- Remaining steps: S % P
+
+The complete cycles don't affect the robot's final position (it ends up where it started), so we can ignore them. We only need to consider the remaining steps to determine the robot's final location and orientation.
+
+This realization transforms our problem from a step-by-step simulation into a mathematical calculation. We're no longer tracking the robot's movement, but instead computing its final state directly.
+
+Now, let's think about how we can determine the robot's position and direction based on these remaining steps. We can divide the perimeter into four segments, corresponding to each edge of the grid:
+>1. Bottom edge (moving east): 0 to width - 1 steps
+>2. Right edge (moving north): width to width + height - 2 steps
+>3. Top edge (moving west): width + height - 1 to 2 * width + height - 3 steps
+>4. Left edge (moving south): 2 * width + height - 2 to P - 1 steps
+
+By comparing our remaining steps to these ranges, we can immediately determine which edge the robot is on and calculate its exact position.
+
+This approach solves our efficiency problem. No matter how many steps the robot takes, we can compute its final state in constant time. We've transformed a potentially O(n) operation (where n is the number of steps) into an O(1) operation.
+
+We need to consider some edge cases:
+1. What if the robot completes exactly one full cycle?
+2. How do we handle the initial state when no steps have been taken?
+
+These edge cases require careful handling in our implementation. For instance, if the robot completes exactly one full cycle, it will be at (0, 0) facing south, not east as it was initially.
+
+If you think, you might realize that we can further simplify our logic by treating the initial state (0 steps) as a special case. This allows us to handle all other cases, including complete cycles, with the same logic.
+In terms of implementation, we realize that we only need to store the total number of steps taken. Everything else can be calculated on demand. This leads to a very memory-efficient solution, using only a few variables regardless of the grid size or number of steps taken.
+
+
+
 ```Java []
 class Robot {
     private final int width, height;
