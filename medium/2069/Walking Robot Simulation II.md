@@ -49,9 +49,241 @@ These edge cases require careful handling in our implementation. For instance, i
 
 If you think, you might realize that we can further simplify our logic by treating the initial state (0 steps) as a special case. This allows us to handle all other cases, including complete cycles, with the same logic.
 In terms of implementation, we realize that we only need to store the total number of steps taken. Everything else can be calculated on demand. This leads to a very memory-efficient solution, using only a few variables regardless of the grid size or number of steps taken.
+### Approach 
+We'll break down the solution step-by-step:
+
+1. Class Structure and State Management
+
+Our Robot class needs to maintain the state of the robot and provide methods for movement and querying. The key state variables we need are:
+
+- width: The width of the grid
+- height: The height of the grid
+- steps: The total number of steps taken by the robot
+
+Pseudo-code for the class structure:
+
+```
+class Robot:
+    private width, height: integers
+    private steps: long integer
+
+    constructor(width, height):
+        this.width = width
+        this.height = height
+        this.steps = 0
+
+    method step(num):
+        // Implementation to be discussed
+
+    method getPos():
+        // Implementation to be discussed
+
+    method getDir():
+        // Implementation to be discussed
+```
+
+Notice that we're using a long integer for steps. This is crucial because the problem states that we can have up to 10^4 calls to step(), each with up to 10^5 steps. This means we could potentially need to track up to 10^9 steps, which exceeds the range of a 32-bit integer.
+
+2. The Step Method
+
+The step method is deceptively simple:
+
+```
+method step(num):
+    steps += num
+```
+
+This simplicity is key to our solution's efficiency. Instead of simulating each individual step, we're simply keeping a count of the total steps taken. This approach allows us to handle large numbers of steps without performance degradation.
+
+The real complexity of our solution lies in how we interpret this step count in the getPos() and getDir() methods.
+
+3. Understanding the Robot's Path
+
+Before we implement getPos() and getDir(), we need to understand the pattern of the robot's movement:
+
+- The robot moves in a clockwise direction around the perimeter of the grid.
+- One complete circuit around the grid covers 2 * (width + height - 2) cells.
+- We can break this circuit into four segments, one for each side of the grid.
+
+This understanding leads us to a key insight: we can use modular arithmetic to determine the robot's position and direction after any number of steps.
+
+4. The getPos Method
+
+The getPos method needs to return the current (x, y) coordinates of the robot. Here's how we can implement it:
+
+```
+method getPos():
+    perimeter = 2 * (width + height - 2)
+    effectiveSteps = steps % perimeter
+
+    if effectiveSteps == 0 and steps != 0:
+        return [0, 0]
+
+    if effectiveSteps < width:
+        return [effectiveSteps, 0]
+    effectiveSteps -= width - 1
+
+    if effectiveSteps < height:
+        return [width - 1, effectiveSteps]
+    effectiveSteps -= height - 1
+
+    if effectiveSteps < width:
+        return [width - 1 - effectiveSteps, height - 1]
+    effectiveSteps -= width - 1
+
+    return [0, height - 1 - effectiveSteps]
+```
+
+Let's break this down:
+
+1. We calculate the perimeter of the grid. This represents one complete circuit of the robot's path.
+
+2. We use modular arithmetic (steps % perimeter) to determine how many steps into the current circuit the robot is. This is our effectiveSteps.
+
+3. We have a special case check for when the robot has completed one or more full circuits. In this case, it will be at (0, 0), but facing South instead of East.
+
+4. We then check which segment of the path the robot is on:
+   - If effectiveSteps < width, it's on the bottom edge moving right.
+   - If it's past that but effectiveSteps < width + height - 1, it's on the right edge moving up.
+   - If it's past that but effectiveSteps < 2 * width + height - 2, it's on the top edge moving left.
+   - Otherwise, it's on the left edge moving down.
+
+5. For each case, we calculate the x and y coordinates accordingly.
+
+This approach allows us to determine the robot's position in constant time, regardless of the number of steps taken.
+
+5. The getDir Method
+
+The getDir method needs to return the current direction the robot is facing. We can implement it like this:
+
+```
+method getDir():
+    if steps == 0:
+        return "East"
+
+    perimeter = 2 * (width + height - 2)
+    effectiveSteps = steps % perimeter
+
+    if effectiveSteps == 0:
+        return "South"
+    if effectiveSteps < width:
+        return "East"
+    if effectiveSteps < width + height - 1:
+        return "North"
+    if effectiveSteps < 2 * width + height - 2:
+        return "West"
+    return "South"
+```
+
+The logic here is similar to getPos:
+
+1. We have a special case for the initial state (0 steps), where the robot is facing East.
+
+2. We again calculate the effective steps into the current circuit.
+
+3. We have another special case for when the robot has completed a full circuit, where it will be facing South.
+
+4. We then determine the direction based on which segment of the path the robot is on, similar to the logic in getPos.
+
+This method also runs in constant time, regardless of the number of steps taken.
+
+6. Optimizations and Considerations
+
+Our solution includes several important optimizations:
+
+a) Constant-time operations: Both getPos and getDir operate in O(1) time, regardless of the number of steps taken. This is crucial for meeting the performance requirements of the problem.
+
+b) Minimal state: We only store the total number of steps, width, and height. We don't need to maintain the current position or direction, as these can be calculated on demand.
+
+c) Handling of large step counts: By using modular arithmetic, we can handle very large step counts without overflow issues.
+
+d) Special case handling: We carefully handle edge cases, such as the initial state and completing full circuits.
+
+7. Alternative Approaches
+
+Before arriving at this solution, we might have considered other approaches:
+
+a) Direct simulation: We could have maintained the current position and direction, updating them with each step. This would be simple to implement but would be O(n) in the number of steps, making it too slow for large step counts.
+
+b) Storing position and direction: We could have updated and stored the current position and direction with each step call. This would make getPos and getDir trivial, but would require more complex logic in the step method and use more memory.
+
+c) Using enums or integers for directions: Instead of string directions, we could have used enums or integer constants. This might have simplified some logic but would require conversion to strings in getDir.
+
+Our chosen approach balances efficiency, simplicity, and adherence to the problem requirements.
+
+8. Conclusion
+
+This solution demonstrates several important problem-solving techniques:
+
+1. Identifying patterns: Recognizing the cyclical nature of the robot's movement was key to developing an efficient solution.
+
+2. Using mathematical insights: Leveraging modular arithmetic allowed us to handle large step counts efficiently.
+
+3. Minimizing state: By storing only the essential information (total steps) and deriving other data as needed, we created a memory-efficient solution.
+
+4. Handling edge cases: Carefully considering and handling special cases (like the initial state and completed circuits) ensures our solution is robust.
+
+5. Optimizing for performance: By using constant-time operations, we ensure our solution can handle the maximum number of calls specified in the problem constraints.
+
+This approach transforms what initially seems like a complex movement simulation into a series of straightforward calculations, showcasing the power of mathematical thinking in algorithm design.
+
+### Complexity
+
+
+**Time Complexity (TC):$O(1)$**
+
+1. Constructor - Robot(int width, int height):
+   TC: O(1)
+   The constructor simply initializes three variables (width, height, and steps), which are all constant time operations.
+
+2. step(int num):
+   TC: O(1)
+   This method performs a single addition operation, regardless of the input size. It's a constant time operation.
+
+3. getPos():
+   TC: O(1)
+   Although this method has several conditional statements and arithmetic operations, the number of operations doesn't depend on the input size or the number of steps taken. All operations (modulo, addition, subtraction, comparisons) are constant time. The method will always execute in the same amount of time, regardless of the grid size or number of steps taken.
+
+4. getDir():
+   TC: O(1)
+   Similar to getPos(), this method uses constant time operations (modulo, comparisons) and always executes the same number of operations regardless of input size or number of steps.
+
+Overall Time Complexity:
+- For a single operation: O(1)
+- For n operations: O(n), where n is the number of method calls (not the number of steps)
+
+The crucial point here is that even if we call step() with a very large number, the operation itself is still O(1). The time complexity doesn't depend on the number of steps, but on the number of method calls.
+
+**Space Complexity (SC): $O(1)$**
+
+1. Instance variables:
+   SC: O(1)
+   The class uses three instance variables (width, height, steps), which occupy a constant amount of memory regardless of the input size or number of operations.
+
+2. Constructor - Robot(int width, int height):
+   SC: O(1)
+   No additional space is allocated beyond the instance variables.
+
+3. step(int num):
+   SC: O(1)
+   This method doesn't allocate any new space, it only modifies an existing variable.
+
+4. getPos():
+   SC: O(1)
+   This method creates a single integer array of size 2 to return the position. This is a constant amount of space regardless of input size or number of steps.
+
+5. getDir():
+   SC: O(1)
+   This method returns a string reference, which doesn't depend on the input size or number of steps.
+
+Overall Space Complexity: O(1)
+
+The space usage remains constant regardless of the number of operations performed or the size of the inputs (within the given constraints).
 
 
 
+
+### Code
 ```Java []
 class Robot {
     private final int width, height;
