@@ -230,7 +230,7 @@ This approach transforms what initially seems like a complex movement simulation
 ### Complexity
 
 
-**Time Complexity (TC):$O(1)$**
+**Time Complexity (TC): $O(1)$**
 
 1. Constructor - Robot(int width, int height):
    TC: O(1)
@@ -616,3 +616,126 @@ Robot.prototype.getDir = function() {
     return "South";
 };
 ```
+
+
+---
+
+Let's combine the strengths of both proofs and create a more detailed, comprehensive, and beginner-friendly mathematical proof for the robot navigation problem. This proof will not only provide a solid foundation for understanding the problem but also ensure clarity and thoroughness.
+
+---
+
+### Mathematical Justification
+**Problem Statement Recap:**
+
+We have a robot on a grid of dimensions `width x height` (denoted as `W x H`), starting at the bottom-left corner $0, 0$ and initially facing "East". The robot can move forward a given number of steps, and if it encounters the boundary of the grid, it turns 90 degrees counterclockwise and continues moving.
+
+We need to determine the robot's position and direction after a given number of steps.
+
+### Key Concepts and Notations
+
+1. **Grid Dimensions:**  
+   Let the grid have a width `W` and a height `H`. The grid has `W` columns and `H` rows, and the robot can move around the perimeter of this grid.
+
+2. **Perimeter Calculation:**
+   The perimeter `P` is the total number of steps the robot can take to complete one full circuit around the grid, returning to the starting point $0, 0$ and facing the same direction.
+   $ P = 2W + 2H - 4
+   \]
+   - **Explanation:**  
+     - The robot moves `W` steps along the bottom edge.
+     - Then, `H-1` steps up along the right edge (excluding the top-right corner).
+     - Next, `W-1` steps along the top edge (excluding the top-left corner).
+     - Finally, `H-1` steps down along the left edge (excluding the bottom-left corner).
+
+### Lemma 1: Cyclic Behavior of the Robot's Movement
+
+**Statement:**  
+The robot's movement is cyclic, meaning it repeats after every `P` steps.
+
+**Proof of Lemma 1:**
+- As the robot moves along the grid's perimeter, it covers exactly `P` steps before returning to the starting point $0, 0$ facing "East".
+- After `P` steps, any additional steps will simply repeat the same path. Thus, after `P` steps, the robot's position and direction reset, forming a cycle.
+
+**Conclusion:**  
+Since the movement is cyclic, we can use modulo arithmetic to determine the robot's effective position and direction after any number of steps.
+
+### Lemma 2: Effective Steps Using Modular Arithmetic
+
+**Statement:**  
+For any number of steps `S`, the remainder `e = S % P` gives the effective steps the robot takes within the current circuit.
+
+**Proof of Lemma 2:**
+- Suppose the robot takes `S` steps. We can express `S` as:
+  $S = qP + e$
+  where `q` is the number of complete circuits, and `e` is the remainder when `S` is divided by `P`.
+- The remainder `e` represents the number of steps into the current cycle, so:
+  $e = S \mod P$
+- This remainder `e` is the effective number of steps that determines the robot's position within the current circuit.
+
+**Conclusion:**  
+Instead of simulating all `S` steps, we only need to consider `e` steps, which reduces the problem to calculating the robot's position and direction after `e` steps.
+
+### Position and Direction Calculation
+
+Now, let's break down the robot's movement along the grid's perimeter into four segments:
+
+1. **Bottom Edge (Eastward Movement):**
+   - **Range:** `0 ≤ e < W`
+   - **Position:** The robot is on the bottom edge, moving rightward.
+   - **Coordinates:** $e, 0$
+   - **Direction:** "East"
+
+2. **Right Edge (Northward Movement):**
+   - **Range:** `W ≤ e < W + H - 1`
+   - **Position:** The robot is on the right edge, moving upward.
+   - **Coordinates:** $W-1, e - (W-1)$
+   - **Direction:** "North"
+
+3. **Top Edge (Westward Movement):**
+   - **Range:** `W + H - 1 ≤ e < 2W + H - 2`
+   - **Position:** The robot is on the top edge, moving leftward.
+   - **Coordinates:** $W-1 - (e - (W + H - 2)), H-1$
+   - **Direction:** "West"
+
+4. **Left Edge (Southward Movement):**
+   - **Range:** `2W + H - 2 ≤ e < P`
+   - **Position:** The robot is on the left edge, moving downward.
+   - **Coordinates:** $0, H-1 - (e - (2W + H - 3))$
+   - **Direction:** "South"
+
+### Theorem: Position and Direction Can Be Calculated in Constant Time $O(1)$
+
+**Statement:**  
+Both the robot's position and direction can be determined in constant time $O(1)$ using the effective steps `e`.
+
+**Proof:**
+1. **Calculate `e = S % P`:**  
+   - This is a single modulo operation, which takes constant time $O(1)$.
+
+2. **Determine the Segment and Position:**
+   - Based on the value of `e`, we perform a constant number of comparisons (at most 4) to determine the robot's segment on the grid.
+   - We then calculate the exact position within that segment using simple arithmetic operations, all of which take constant time.
+
+3. **Determine the Direction:**
+   - Similar to the position, we determine the direction by checking which segment the robot is in. This involves a few comparisons and returns the corresponding direction in constant time.
+
+**Conclusion:**  
+Since all operations—calculating `e`, determining the segment, and computing the position and direction—are performed in constant time, the overall complexity is $O(1)$. This makes the solution efficient even for very large inputs.
+
+### Correctness of the Solution
+
+**Verification:**
+- The robot's cyclic behavior ensures that after every `P` steps, it returns to the starting point $0, 0$ and resets its direction to "East".
+- Our calculations correctly handle edge cases:
+  - **Initial State (`S = 0`):**  
+    - The robot is at $0, 0$ facing "East".
+  - **Complete Circuits (`S % P = 0`, `S ≠ 0`):**  
+    - The robot is at $0, 0$ but faces "South", indicating it completed a full loop.
+
+### Conclusion
+
+This comprehensive proof demonstrates that:
+1. The robot's movement is cyclic, with a cycle length equal to the grid's perimeter `P`.
+2. We can efficiently compute the robot's position and direction after any number of steps using modular arithmetic.
+3. The solution operates in constant time $O(1)$, ensuring both correctness and efficiency even for large inputs.
+
+
