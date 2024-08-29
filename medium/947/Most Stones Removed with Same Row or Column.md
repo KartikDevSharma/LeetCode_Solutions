@@ -368,6 +368,102 @@ var removeStones = function(stones) {
 
 ```
 ---
+
+Lets take example 1 from problem to understant this better
+### **Given Stones**
+- Stones are located at: \((0,0), (0,1), (1,0), (1,2), (2,1), (2,2)\).
+
+### **Initialization**
+- `setRepresentatives` is used to store the representative (leader) for both rows and columns. 
+- Rows are indexed from 1 to 10001, and columns are indexed from 10002 to 20002.
+- `connectedComponentCount` keeps track of the number of connected components.
+
+### **Step-by-Step Dry Run**
+
+**Step 1: Process the First Stone \([0, 0]\)**
+- \(x = 0\), \(y = 0\).
+- Row index for \(0\) is `1`.
+- Column index for \(0\) is `10002`.
+- Call `findRepresentative(1)` and `findRepresentative(10002)`.
+  - Since both are new elements, they become their own representatives:
+    - `findRepresentative(1) = 1`
+    - `findRepresentative(10002) = 10002`
+- Since they belong to different components, call `mergeComponents(1, 10002)`:
+  - The smaller index `1` becomes the representative.
+  - `setRepresentatives[10002] = 1`
+  - `connectedComponentCount` is incremented by 1 for both row and column, but then decremented by 1 after the union, so it remains `1`.
+
+**Step 2: Process the Second Stone \([0, 1]\)**
+- \(x = 0\), \(y = 1\).
+- Row index for \(0\) is `1`.
+- Column index for \(1\) is `10003`.
+- Call `findRepresentative(1)` and `findRepresentative(10003)`.
+  - `findRepresentative(1) = 1` (already merged from the previous step).
+  - Since column `1` is new, `findRepresentative(10003) = 10003`.
+- Since they belong to different components, call `mergeComponents(1, 10003)`:
+  - `1` remains the representative.
+  - `setRepresentatives[10003] = 1`
+  - `connectedComponentCount` remains `1` after the union.
+
+**Step 3: Process the Third Stone \([1, 0]\)**
+- \(x = 1\), \(y = 0\).
+- Row index for \(1\) is `2`.
+- Column index for \(0\) is `10002`.
+- Call `findRepresentative(2)` and `findRepresentative(10002)`.
+  - Since row `1` is new, `findRepresentative(2) = 2`.
+  - `findRepresentative(10002) = 1` (already merged with \([0, 0]\)).
+- Since they belong to different components, call `mergeComponents(2, 1)`:
+  - `1` remains the representative.
+  - `setRepresentatives[2] = 1`
+  - `connectedComponentCount` remains `1` after the union.
+
+**Step 4: Process the Fourth Stone \([1, 2]\)**
+- \(x = 1\), \(y = 2\).
+- Row index for \(1\) is `2`.
+- Column index for \(2\) is `10004`.
+- Call `findRepresentative(2)` and `findRepresentative(10004)`.
+  - `findRepresentative(2) = 1` (already merged with \([1, 0]\)).
+  - Since column `2` is new, `findRepresentative(10004) = 10004`.
+- Since they belong to different components, call `mergeComponents(1, 10004)`:
+  - `1` remains the representative.
+  - `setRepresentatives[10004] = 1`
+  - `connectedComponentCount` remains `1` after the union.
+
+**Step 5: Process the Fifth Stone \([2, 1]\)**
+- \(x = 2\), \(y = 1\).
+- Row index for \(2\) is `3`.
+- Column index for \(1\) is `10003`.
+- Call `findRepresentative(3)` and `findRepresentative(10003)`.
+  - Since row `2` is new, `findRepresentative(3) = 3`.
+  - `findRepresentative(10003) = 1` (already merged with \([0, 1]\)).
+- Since they belong to different components, call `mergeComponents(3, 1)`:
+  - `1` remains the representative.
+  - `setRepresentatives[3] = 1`
+  - `connectedComponentCount` remains `1` after the union.
+
+**Step 6: Process the Sixth Stone \([2, 2]\)**
+- \(x = 2\), \(y = 2\).
+- Row index for \(2\) is `3`.
+- Column index for \(2\) is `10004`.
+- Call `findRepresentative(3)` and `findRepresentative(10004)`.
+  - `findRepresentative(3) = 1` (already merged with \([2, 1]\)).
+  - `findRepresentative(10004) = 1` (already merged with \([1, 2]\)).
+- Both already belong to the same component, so no union is needed.
+
+### **Connected Components**
+
+After processing all stones, the entire grid is connected as a single component, with `1` as the root representative.
+
+### **Calculating Removable Stones**
+
+The algorithm calculates the number of removable stones as `|S| - C`, where:
+- `|S| = 6` (total number of stones).
+- `C = 1` (only one connected component).
+
+Thus, the number of removable stones is `6 - 1 = 5`.
+
+
+---
 ### **Mathematical Proof**
 
 #### **1. Problem Recap**
