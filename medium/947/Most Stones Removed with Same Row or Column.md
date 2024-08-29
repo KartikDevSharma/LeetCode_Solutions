@@ -1,32 +1,100 @@
 
 
-### Intuition
-Let's start by breaking down the problem statement and constraints:
-
-1. We have stones on a 2D plane at integer coordinates.
-2. A stone can be removed if it shares a row or column with another stone.
-3. We need to find the maximum number of stones that can be removed.
-4. We're dealing with up to 1000 stones, with coordinates ranging from 0 to 10,000.
-
-My initial thought was to imagine the stones on a grid. Try to imagine some lines connecting stones in the same row or column, forming a kind of network. Well This mental image immediately reminded me of some graph problems I've solved before.
-
-So at first I considered a brute-force approach to try remove the stones one by one, always picking a stone that shares a row or column with another. But I quickly realized this would be inefficient and wouldn't guarantee the optimal solution.
-
-Then I thought about using depth-first search (DFS). The idea was to treat each stone as a node in a graph, with edges between stones that share a row or column. I could use DFS to explore all connected stones, removing them as I go. This was good, but still like how would I efficiently find all stones in the same row or column?
-
-I even tried an idea of using hash maps to group stones by row and column, but it felt like overkill. But think it like this what if, instead of focusing on the stones themselves, I considered the rows and columns as the primary elements?
-Therefore, I realized that all stones in the same row or column form a single connected component. Instead of explicitly connecting stones, I could implicitly connect them through their shared rows and columns.
-
-This helped me to think about disjoint set union (DSU) data structures, also known as union-find. I've used DSU before to efficiently handle merging of sets, and it seemed perfect for this problem. Each row and column could start as its own set, and as we process the stones, we'd merge these sets. But again how to represent rows and columns in a way that doesn't confuse them? I couldn't use the same numbering system for both. That's when I came up with the idea of offsetting the column values by a large number, effectively creating two separate ranges for rows and columns.
-
-When I was working on this concept, I realized I needed to keep track of the number of unique components. Each new row or column encountered would initially be its own component, but as we process the stones, these components would merge. The final number of components would be crucial in determining how many stones we could remove.
-
-I also thought about the edge cases. What if all stones are in the same row? Or if no stones share any rows or columns? My approach needed to handle these scenarios correctly.
-
-Throughout this thought process, I kept circling back to the core insight: the maximum number of stones we can remove is equal to the total number of stones minus the number of connected components. This is because in each connected component, we can remove all stones except one.
-The good thing about this approach is that it scales well – processing each stone once and performing efficient union-find operations means we can handle even the maximum input size of 1000 stones quickly.
+# Intuition
 
 
+## The Problem at Hand
+
+Imagine we're playing a peculiar game on a giant chessboard. We've scattered stones across this board, each occupying its own square. Now, here's the twist: we can remove a stone if - and only if - there's another stone in the same row or column. Our goal? Remove as many stones as possible.
+
+At first glance, this seems straightforward. Just keep removing stones that share rows or columns until you can't anymore, right? But hold on - the order in which we remove stones matters. Make the wrong choice early on, and we might leave stones stranded, unable to be removed. 
+
+We're dealing with up to 1000 stones here, spread across a board that's 10,000 squares on each side. That's a lot of possibilities to consider. How do we ensure we're making the optimal choices?
+
+
+### The Brute Force Approach
+
+My first instinct was to tackle this head-on. "Let's just try all possible removal sequences!" I thought. We could start with any stone, remove it if possible, and then recursively try removing the rest. By exploring all paths, we'd surely find the optimal solution.
+
+But wait a minute. With up to 1000 stones, the number of possible removal sequences is astronomical. We're talking about a factorial growth in possibilities. Even for a modest number of stones, this approach would take an eternity. Clearly, we need to be smarter about this.
+
+### Visualizing Connections
+
+As I looked at the problem, I started to visualize the stones and their relationships. In my mind's eye, I saw lines connecting stones in the same rows and columns, forming a intricate web across the board. This mental image was a crucial moment - it reminded me of graphs I'd worked with before.
+
+What if, instead of thinking about individual stones, we considered these connections? After all, the ability to remove a stone depends entirely on its connections to other stones. This shift in perspective was the first step towards a more efficient solution.
+
+### The Graph Analogy
+
+With this new viewpoint, our chessboard transformed into a graph. Each stone became a node, and the shared rows and columns became edges connecting these nodes. Suddenly, our problem looked a lot like finding connected components in a graph.
+
+Why is this important? Well, think about it. In a connected group of stones, we can remove all but one of them. The last one has to stay because it no longer shares a row or column with any other stone - all its "friends" have been removed.
+
+This realization was a game-changer. Instead of focusing on the sequence of removals, we could focus on identifying these connected groups. The maximum number of removable stones would be the total number of stones minus the number of these groups (since we have to leave one stone per group).
+
+### The DFS Attempt
+
+With the help of this graph analogy, my next thought was to use depth-first search (DFS). It's a classic algorithm for exploring graphs, after all. We could start at any stone, use DFS to find all connected stones, mark them for removal, and repeat until we've covered the entire board.
+
+This approach had promise. It would correctly identify the connected components and give us the right answer. But as I started to think about implementation, a question nagged at me: how would we efficiently find all stones in the same row or column?
+
+We could maintain lists of stones for each row and column, but that would require a lot of memory and time to set up. Or we could scan through all stones for each DFS step, but that would be slow for a large number of stones. There had to be a better way.
+
+### The Disjoint Set Union Epiphany
+
+As I was struggling with the efficiency problem of DFS, I remembered the Disjoint Set Union (DSU) data structure, also known as Union-Find. DSU is fantastic at efficiently grouping elements and determining whether two elements belong to the same group.
+
+But how could we apply DSU to our stone removal problem? The key insight came when I shifted my perspective once again. Instead of thinking about stones as the primary elements, what if we considered rows and columns as the elements to be grouped?
+
+This was the "aha" moment. Every stone, by its very position, connects a row with a column. If we treat rows and columns as the elements in our DSU, then placing a stone is equivalent to unioning (merging) a row group with a column group.
+
+### Representing Rows and Columns
+
+With this new approach in mind, a new challenge emerged: how do we represent rows and columns in a way that doesn't confuse them? We can't use the same numbering system for both, as that would muddle our groups.
+
+The solution was elegantly simple: offset the column values by a large number. By adding 10,001 (just beyond the maximum row value) to each column number, we effectively create two separate ranges - one for rows and one for columns. This allows our DSU structure to treat them as distinct elements while still maintaining their relationships.
+
+### Tracking Components
+
+As I developed this idea further, I realized we needed to keep careful track of the number of unique components. Each new row or column encountered would start as its own component. As we process the stones, these components would merge. The final number of components would be crucial in determining how many stones we could remove.
+
+This tracking mechanism solves our problem beautifully. We start with zero components. Each time we encounter a new row or column, we increment our count. Each time we merge two components (by placing a stone), we decrement the count. In the end, the count gives us the number of connected components in our graph.
+
+### Handling Edge Cases
+
+No solution is complete without considering edge cases. What if all stones are in the same row? In this scenario, we'd have two components - the row and the column - and we could remove all but one stone. What if no stones share any rows or columns? Then each stone would be its own component, and we couldn't remove any.
+
+The beauty of our DSU approach is that it handles these cases automatically. Whether we have one large group or many small ones, the component count will accurately reflect the situation.
+
+
+**Mathematical Intuition for the DSU Approach:**
+
+Let's consider the problem as a graph, where each stone represents a node, and two nodes are connected if they share the same row or column. Mathematically, we can define the stone positions as a set $S = \{(x_1, y_1), (x_2, y_2), \dots, (x_n, y_n)\}$. 
+
+To analyze the problem, imagine two functions: $f_r(x, y) = x$ and $f_c(x, y) = y + k$, where $k$ is a large constant (in our case, 10001). These functions map the 2D coordinates of stones into a 1D space, separating rows and columns. Applying these functions to the set $S$, we get two new sets: $R = \{f_r(x, y) \mid (x, y) \in S\}$ and $C = \{f_c(x, y) \mid (x, y) \in S\}$, representing all unique rows and columns.
+
+Now, the union of these sets $U = R \cup C$ captures all unique rows and columns as if they were part of a larger "super set." The DSU structure operates on this set $U$, merging elements as we process each stone. The key insight here is that the number of connected components in this graph is given by $|U| - (|R \cup C| - |S|)$, where $|R \cup C|$ represents the total number of unique rows and columns.
+
+This brings us to a critical realization: the number of stones we can remove is $|S| - (|R| + |C| - (|R \cup C| - |S|)) = 2|S| - |R \cup C|$. In simpler terms, $|S| - |U| + 1$ gives the number of stones that can be removed, because $|U|$ represents the number of connected components, and in each component, we can remove all but one stone. This formulation elegantly shows how we've transformed a 2D problem into a 1D set operation, allowing us to efficiently count the number of removable stones.
+
+
+
+
+This final approach, using DSU with rows and columns as elements, is superior to our earlier attempts in several ways:
+
+1. **Efficiency**: We process each stone exactly once, performing constant-time DSU operations for each. This scales well even for the maximum input size of 1000 stones.
+
+2. **Simplicity**: We've eliminated the need to explicitly track connections between stones. The row-column unions implicitly capture all necessary relationships.
+
+3. **Elegance**: By focusing on components rather than removal sequences, we've simplified the problem. The solution emerges naturally from the structure we've created.
+
+4. **Flexibility**: This approach handles all possible configurations of stones, from highly connected to completely disconnected, without any special cases.
+
+5. **Insight**: It provides a deeper understanding of the problem's structure, revealing that the key is in the connections, not the stones themselves.
+
+The journey from brute force to this DSU solution mirrors a common pattern in algorithm design: moving from a direct, intuitive approach to a more abstract but more powerful representation of the problem. By reconceptualizing the stones as connections between rows and columns, we've transformed a complex sequence problem into an elegant grouping problem.
+
+This solution method doesn't just solve the problem; it reframes our understanding of it. And that's the hallmark of a truly insightful algorithm - it doesn't just compute the answer, it changes how we think about the question.
 
 
 ### Approach
