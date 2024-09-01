@@ -291,3 +291,134 @@ var construct2DArray = function(original, m, n) {
 };
 
 ```
+---
+
+### Approach 2 o(n)
+
+
+```Java []
+class Solution {
+    public int[][] construct2DArray(int[] arr1D, int rows, int cols) {
+        if (rows * cols != arr1D.length) {
+            return new int[0][0];
+        }
+        
+        int[][] arr2D = new int[rows][cols];
+        for (int i = 0; i < arr1D.length; i++) {
+            arr2D[i / cols][i % cols] = arr1D[i];
+        }
+        
+        return arr2D;
+    }
+}
+
+```
+```C++ []
+class Solution {
+public:
+    vector<vector<int>> construct2DArray(vector<int>& arr1D, int rows, int cols) {
+        if (rows * cols != arr1D.size()) {
+            return {};
+        }
+        vector<vector<int>> arr2D(rows, vector<int>(cols));
+        for (int i = 0; i < rows * cols; i++) {
+            arr2D[i / cols][i % cols] = arr1D[i];
+        }
+        return arr2D;
+    }
+};
+
+```
+```Python []
+import sys
+import json
+
+class Solution:
+    def construct2DArray(self, arr1D, rows, cols):
+        if rows * cols != len(arr1D):
+            return []
+        return [arr1D[i*cols:(i+1)*cols] for i in range(rows)]
+
+def format_output(result):
+    return '[' + ','.join(str(row).replace(' ', '') for row in result) + ']'
+
+def main():
+    input_data = sys.stdin.read().strip()
+    lines = input_data.splitlines()
+    num_test_cases = len(lines) // 3
+    results = []
+    
+    for i in range(num_test_cases):
+        arr1D = json.loads(lines[i*3])
+        rows = int(lines[i*3 + 1])
+        cols = int(lines[i*3 + 2])
+        result = Solution().construct2DArray(arr1D, rows, cols)
+        formatted_result = format_output(result)
+        results.append(formatted_result)
+    
+    with open('user.out', 'w') as f:
+        for result in results:
+            f.write(f"{result}\n")
+
+if __name__ == "__main__":
+    main()
+    exit(0)
+
+```
+```Go []
+func construct2DArray(arr1D []int, rows int, cols int) [][]int {
+    if rows * cols != len(arr1D) {
+        return [][]int{}
+    }
+    
+    arr2D := make([][]int, rows)
+    for i := range arr2D {
+        arr2D[i] = make([]int, cols)
+    }
+    
+    for i, v := range arr1D {
+        arr2D[i / cols][i % cols] = v
+    }
+    
+    return arr2D
+}
+
+```
+```Rust []
+impl Solution {
+    pub fn construct2_d_array(arr1d: Vec<i32>, rows: i32, cols: i32) -> Vec<Vec<i32>> {
+        if (rows * cols) as usize != arr1d.len() {
+            return vec![];
+        }
+        
+        let rows = rows as usize;
+        let cols = cols as usize;
+        
+        (0..rows)
+            .map(|i| arr1d[i*cols..(i+1)*cols].to_vec())
+            .collect()
+    }
+}
+
+```
+```JavaScript []
+/**
+ * @param {number[]} arr1D
+ * @param {number} rows
+ * @param {number} cols
+ * @return {number[][]}
+ */
+var construct2DArray = function(arr1D, rows, cols) {
+    if (rows * cols !== arr1D.length) {
+        return [];
+    }
+    
+    const arr2D = new Array(rows);
+    for (let i = 0; i < rows; i++) {
+        arr2D[i] = arr1D.slice(i * cols, (i + 1) * cols);
+    }
+    
+    return arr2D;
+};
+
+```
