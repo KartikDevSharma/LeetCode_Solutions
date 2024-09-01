@@ -316,3 +316,162 @@ if __name__ == "__main__":
     kdsmain()
     sys.exit(0)
 ```
+
+---
+
+#### Approach 3
+
+
+```Java []
+class Solution {
+    public List<List<Integer>> findDifference(int[] nums1, int[] nums2) {
+        long[] bitSet1 = new long[32];  // Can handle numbers from -1000 to 1000
+        long[] bitSet2 = new long[32];
+        List<List<Integer>> result = Arrays.asList(new ArrayList<>(), new ArrayList<>());
+
+        for (int num : nums1) {
+            int idx = (num + 1000) / 64;
+            long bit = 1L << ((num + 1000) % 64);
+            bitSet1[idx] |= bit;
+        }
+
+        for (int num : nums2) {
+            int idx = (num + 1000) / 64;
+            long bit = 1L << ((num + 1000) % 64);
+            bitSet2[idx] |= bit;
+        }
+
+        for (int i = 0; i < 32; i++) {
+            long uniqueToNums1 = bitSet1[i] & ~bitSet2[i];
+            long uniqueToNums2 = bitSet2[i] & ~bitSet1[i];
+
+            for (int j = 0; j < 64; j++) {
+                if ((uniqueToNums1 & (1L << j)) != 0) {
+                    result.get(0).add(i * 64 + j - 1000);
+                }
+                if ((uniqueToNums2 & (1L << j)) != 0) {
+                    result.get(1).add(i * 64 + j - 1000);
+                }
+            }
+        }
+
+        return result;
+    }
+}
+```
+```C++ []
+class Solution {
+public:
+    vector<vector<int>> findDifference(vector<int>& nums1, vector<int>& nums2) {
+        const int BIT_SIZE = 64;
+        const int OFFSET = 1000;
+        const int ARRAY_SIZE = 32;
+        
+        bitset<ARRAY_SIZE * BIT_SIZE> bitSet1, bitSet2;
+        
+        // Fill bitset for nums1
+        for (int num : nums1) {
+            int idx = (num + OFFSET) / BIT_SIZE;
+            int bit = (num + OFFSET) % BIT_SIZE;
+            bitSet1.set(idx * BIT_SIZE + bit);
+        }
+        
+        // Fill bitset for nums2
+        for (int num : nums2) {
+            int idx = (num + OFFSET) / BIT_SIZE;
+            int bit = (num + OFFSET) % BIT_SIZE;
+            bitSet2.set(idx * BIT_SIZE + bit);
+        }
+        
+        vector<int> uniqueToNums1, uniqueToNums2;
+        
+        // Check unique elements for nums1
+        for (int i = 0; i < ARRAY_SIZE * BIT_SIZE; ++i) {
+            if (bitSet1[i] && !bitSet2[i]) {
+                uniqueToNums1.push_back(i - OFFSET);
+            }
+        }
+        
+        // Check unique elements for nums2
+        for (int i = 0; i < ARRAY_SIZE * BIT_SIZE; ++i) {
+            if (bitSet2[i] && !bitSet1[i]) {
+                uniqueToNums2.push_back(i - OFFSET);
+            }
+        }
+        
+        return {uniqueToNums1, uniqueToNums2};
+    }
+};
+
+static const auto kds = []() {
+    std::ios::sync_with_stdio(false);
+    std::cin.tie(nullptr);
+    std::cout.tie(nullptr);
+    return 0;
+}();
+```
+```Python []
+class Solution:
+    def findDifference(self, nums1: list[int], nums2: list[int]) -> list[list[int]]:
+        BIT_SIZE = 64
+        OFFSET = 1000
+        ARRAY_SIZE = 32
+        
+        bitSet1 = [0] * ARRAY_SIZE
+        bitSet2 = [0] * ARRAY_SIZE
+        
+        # Fill bitset for nums1
+        for num in nums1:
+            idx = (num + OFFSET) // BIT_SIZE
+            bit = (num + OFFSET) % BIT_SIZE
+            bitSet1[idx] |= (1 << bit)
+        
+        # Fill bitset for nums2
+        for num in nums2:
+            idx = (num + OFFSET) // BIT_SIZE
+            bit = (num + OFFSET) % BIT_SIZE
+            bitSet2[idx] |= (1 << bit)
+        
+        uniqueToNums1 = []
+        uniqueToNums2 = []
+        
+        # Check unique elements for nums1
+        for i in range(ARRAY_SIZE):
+            uniqueToNums1Bits = bitSet1[i] & ~bitSet2[i]
+            for j in range(BIT_SIZE):
+                if uniqueToNums1Bits & (1 << j):
+                    uniqueToNums1.append(i * BIT_SIZE + j - OFFSET)
+        
+        # Check unique elements for nums2
+        for i in range(ARRAY_SIZE):
+            uniqueToNums2Bits = bitSet2[i] & ~bitSet1[i]
+            for j in range(BIT_SIZE):
+                if uniqueToNums2Bits & (1 << j):
+                    uniqueToNums2.append(i * BIT_SIZE + j - OFFSET)
+        
+        return [uniqueToNums1, uniqueToNums2]
+
+def format_output(result):
+    return '[' + ','.join(str(row).replace(' ', '') for row in result) + ']'
+
+def kdsmain():
+    input_data = sys.stdin.read().strip()
+    lines = input_data.splitlines()
+    num_test_cases = len(lines) // 2
+    results = []
+    
+    for i in range(num_test_cases):
+        nums1 = json.loads(lines[i*2])
+        nums2 = json.loads(lines[i*2 + 1])
+        result = Solution().findDifference(nums1, nums2)
+        formatted_result = format_output(result)
+        results.append(formatted_result)
+    
+    with open('user.out', 'w') as f:
+        for result in results:
+            f.write(f"{result}\n")
+
+if __name__ == "__main__":
+    kdsmain()
+    sys.exit(0)
+```
