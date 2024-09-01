@@ -330,9 +330,6 @@ public:
 
 ```
 ```Python []
-import sys
-import json
-
 class Solution:
     def construct2DArray(self, arr1D, rows, cols):
         if rows * cols != len(arr1D):
