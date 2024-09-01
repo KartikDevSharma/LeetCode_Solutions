@@ -1,3 +1,22 @@
+#### Intuition
+
+First understand that we're dealing with a comparison problem and We need to identify elements that exist in one array but not the other and we need to do this in both directions It's like we're playing a game of "spot the difference" between two sets of numbers. We're told that the arrays can have up to 1000 elements each and the values in these arrays range from -1000 to 1000. This information is important because it tells us about the "universe" we're working in. We're not dealing with an infinite range of numbers, but a finite, manageable set. 
+Now, let's think about how one might approach this problem intuitively. The most straightforward way would be to take each element from the first array and check if it exists in the second array. If it doesn't we've found a unique element. Then we'd do the same for the second array. It is simple but would be time-consuming especially for larger arrays.
+
+So can we could somehow "mark" the presence of numbers, Imagine we had a giant board with 2001 slots (representing all possible values from -1000 to 1000) we could go through each array and put a flag in the corresponding slot for each number we encounter. After doing this for both arrays we'd have a visual representation of which numbers appear in which array. This is basically what our approach will do but instead of a physical board we use boolean arrays. It's like creating a fingerprint for each array where each 'true' value in our boolean array represents the presence of a number. Instead of repeatedly searching through arrays we're making a single pass through each array to mark the numbers and then a single pass through our "board" to identify the differences. This method takes advantage of the fact that we know the range of possible values beforehand. 
+
+Consider the potential errors we avoid with this method We don't have to worry about duplicate values in the original arrays because each number regardless of how many times it appears it will only be marked once in our boolean array. This inherently handles the requirement for distinct integers in our output. Moreover, this approach handles edge cases we can transform the problem from a comparison of arbitrary integers to a comparison of fixed positions in boolean arrays. This transformation is what allows us to achieve a linear time complexity.
+
+#### Appraoch
+
+
+
+
+
+
+
+---
+
 ```Java []
 class Solution {
     public List<List<Integer>> findDifference(int[] nums1, int[] nums2) {
@@ -186,6 +205,24 @@ var findDifference = function(nums1, nums2) {
 ---
 
 Approach 2
+#### Intuition
+In our previous solution we used boolean arrays to create a sort of "fingerprint" for each input array While that approach was efficient it had a fixed memory overhead regardless of the input size. What if we could find a way to adapt our solution to be more flexible, especially for cases where the range of numbers might be much larger or unknown?
+
+This appraoch we will use hash sets since we're still trying to efficiently mark the presence of numbers, but now we're doing it in a way that scales with the input size rather than the range of possible values.
+We still need a way to quickly check if a number exists in an array. Hash sets provide this capability with average O(1) time complexity for both insertion and lookup operations. Remember, we need to find distinct integers. Hash sets automatically handle this for us by only storing unique values. Unlike our previous approach with boolean arrays, hash sets can handle any range of integer values without requiring us to know the range beforehand. While hash sets do have some overhead, they only grow as large as the number of unique elements in our input arrays, which could be significantly smaller than the full range of possible values.
+
+
+We start by creating two hash sets, one for each input array. As we populate these sets, we're effectively creating a compressed representation of each array that only contains unique values. This step alone solves part of our problem - identifying distinct integers. Next, we need to find the elements that are in one set but not the other. This is where the power of sets really shines. Set operations like difference or containment checks are typically very efficient. We iterate through the first set, checking for each element if it's not in the second set. If an element passes this test, we've found a number unique to the first array. We do the same process in reverse for the second set.
+
+
+- Duplicates in the original arrays are automatically dealt with by the sets.
+- The order of elements in the original arrays doesn't matter, aligning with the problem's statement that the output order is not important.
+- It works equally well for dense or sparse distributions of numbers within the given range.
+
+One might ask, "Why not just use the sets as our final answer?" The reason is that we need to return our result as lists, not sets. This final conversion step ensures we meet the problem's output requirements.
+
+What we did basically is we changed our thought process from "find elements not in the other array" to "find elements not in the other set," which is a more efficient operation. This solution might use more memory than our boolean array approach for small ranges of numbers, but it scales much better for larger or unknown ranges. 
+
 
 ```Java []
 
