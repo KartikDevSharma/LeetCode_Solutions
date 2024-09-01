@@ -1,4 +1,157 @@
 ```Java []
+
+class Solution {
+    public int chalkReplacer(int[] chalk, int initialChalkPieces) {
+        long totalChalkNeeded = 0;
+        for (int studentChalkUse : chalk) {
+            totalChalkNeeded += studentChalkUse;
+        }
+        
+        int remainingChalk = (int)(initialChalkPieces % totalChalkNeeded);
+        
+        for (int studentIndex = 0; studentIndex < chalk.length; studentIndex++) {
+            if (remainingChalk < chalk[studentIndex]) {
+                return studentIndex;
+            }
+            remainingChalk -= chalk[studentIndex];
+        }
+        
+        return 0;  
+    }
+}
+
+```
+```C++ []
+class Solution {
+public:
+    int chalkReplacer(vector<int>& chalk, int initialChalkPieces) {
+        long long totalChalkNeeded = 0;
+        for (int studentChalkUse : chalk) {
+            totalChalkNeeded += studentChalkUse;
+        }
+        
+        int remainingChalk = initialChalkPieces % totalChalkNeeded;
+        
+        for (int studentIndex = 0; studentIndex < chalk.size(); studentIndex++) {
+            if (remainingChalk < chalk[studentIndex]) {
+                return studentIndex;
+            }
+            remainingChalk -= chalk[studentIndex];
+        }
+        
+        return 0;
+    }
+};
+
+
+```
+```Python []
+class Solution:
+    def chalkReplacer(self, chalk: List[int], initialChalkPieces: int) -> int:
+        totalChalkNeeded = sum(chalk)
+        remainingChalk = initialChalkPieces % totalChalkNeeded
+        
+        for studentIndex, studentChalkUse in enumerate(chalk):
+            if remainingChalk < studentChalkUse:
+                return studentIndex
+            remainingChalk -= studentChalkUse
+        
+        return 0
+
+# I/O handling
+import sys
+import json
+
+def kdsmain():
+    input_data = sys.stdin.read().strip()
+    lines = input_data.splitlines()
+    
+    num_test_cases = len(lines) // 2
+    results = []
+
+    for i in range(num_test_cases):
+        chalk = json.loads(lines[i*2])
+        initialChalkPieces = int(lines[i*2 + 1])
+        
+        result = Solution().chalkReplacer(chalk, initialChalkPieces)
+        results.append(str(result))
+
+    with open('user.out', 'w') as f:
+        for result in results:
+            f.write(f"{result}\n")
+
+if __name__ == "__main__":
+    kdsmain()
+    exit(0)
+
+
+```
+```Go []
+
+func chalkReplacer(chalk []int, initialChalkPieces int) int {
+    totalChalkNeeded := 0
+    for _, studentChalkUse := range chalk {
+        totalChalkNeeded += studentChalkUse
+    }
+    
+    remainingChalk := initialChalkPieces % totalChalkNeeded
+    
+    for studentIndex, studentChalkUse := range chalk {
+        if remainingChalk < studentChalkUse {
+            return studentIndex
+        }
+        remainingChalk -= studentChalkUse
+    }
+    
+    return 0
+}
+
+```
+```Rust []
+impl Solution {
+    pub fn chalk_replacer(chalk: Vec<i32>, initial_chalk_pieces: i32) -> i32 {
+        let total_chalk_needed: i64 = chalk.iter().map(|&x| x as i64).sum();
+        let mut remaining_chalk = (initial_chalk_pieces as i64 % total_chalk_needed) as i32;
+        
+        for (student_index, &student_chalk_use) in chalk.iter().enumerate() {
+            if remaining_chalk < student_chalk_use {
+                return student_index as i32;
+            }
+            remaining_chalk -= student_chalk_use;
+        }
+        
+        0
+    }
+}
+
+
+```
+```JavaScript []
+
+/**
+ * @param {number[]} chalk
+ * @param {number} initialChalkPieces
+ * @return {number}
+ */
+var chalkReplacer = function(chalk, initialChalkPieces) {
+    let totalChalkNeeded = chalk.reduce((sum, studentChalkUse) => sum + studentChalkUse, 0);
+    let remainingChalk = initialChalkPieces % totalChalkNeeded;
+    
+    for (let studentIndex = 0; studentIndex < chalk.length; studentIndex++) {
+        if (remainingChalk < chalk[studentIndex]) {
+            return studentIndex;
+        }
+        remainingChalk -= chalk[studentIndex];
+    }
+    
+    return 0;
+};
+
+```
+
+
+---
+```Java []
 class Solution {
     public int chalkReplacer(int[] chalkArray, int totalChalk) {
         return findChalkReplacer(chalkArray, totalChalk);
