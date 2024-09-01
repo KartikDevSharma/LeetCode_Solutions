@@ -182,3 +182,100 @@ var findDifference = function(nums1, nums2) {
     return uniqueElements;
 };
 ```
+
+---
+
+Approach 2
+
+```Java []
+
+public class Solution {
+    public List<List<Integer>> findDifference(int[] nums1, int[] nums2) {
+        Set<Integer> set1 = new HashSet<>();
+        Set<Integer> set2 = new HashSet<>();
+        
+        for (int num : nums1) set1.add(num);
+        for (int num : nums2) set2.add(num);
+        
+        List<Integer> uniqueToNums1 = new ArrayList<>();
+        List<Integer> uniqueToNums2 = new ArrayList<>();
+        
+        for (int num : set1) {
+            if (!set2.contains(num)) uniqueToNums1.add(num);
+        }
+        
+        for (int num : set2) {
+            if (!set1.contains(num)) uniqueToNums2.add(num);
+        }
+        
+        return Arrays.asList(uniqueToNums1, uniqueToNums2);
+    }
+}
+```
+```C++ []
+class Solution {
+public:
+    vector<vector<int>> findDifference(vector<int>& nums1, vector<int>& nums2) {
+        unordered_set<int> set1(nums1.begin(), nums1.end());
+        unordered_set<int> set2(nums2.begin(), nums2.end());
+        
+        vector<int> uniqueToNums1;
+        vector<int> uniqueToNums2;
+        
+        for (int num : set1) {
+            if (set2.find(num) == set2.end()) {
+                uniqueToNums1.push_back(num);
+            }
+        }
+        
+        for (int num : set2) {
+            if (set1.find(num) == set1.end()) {
+                uniqueToNums2.push_back(num);
+            }
+        }
+        
+        return {uniqueToNums1, uniqueToNums2};
+    }
+};
+
+static const auto kds = []() {
+    std::ios::sync_with_stdio(false);
+    std::cin.tie(nullptr);
+    std::cout.tie(nullptr);
+    return 0;
+}();
+```
+```Python []
+class Solution:
+    def findDifference(self, nums1: list[int], nums2: list[int]) -> list[list[int]]:
+        set1 = set(nums1)
+        set2 = set(nums2)
+        
+        uniqueToNums1 = [num for num in set1 if num not in set2]
+        uniqueToNums2 = [num for num in set2 if num not in set1]
+        
+        return [uniqueToNums1, uniqueToNums2]
+def format_output(result):
+    return '[' + ','.join(str(row).replace(' ', '') for row in result) + ']'
+
+def kdsmain():
+    input_data = sys.stdin.read().strip()
+    lines = input_data.splitlines()
+    num_test_cases = len(lines) // 2
+    results = []
+    
+    for i in range(num_test_cases):
+        nums1 = json.loads(lines[i*2])
+        nums2 = json.loads(lines[i*2 + 1])
+        result = Solution().findDifference(nums1, nums2)
+        formatted_result = format_output(result)
+        results.append(formatted_result)
+    
+    with open('user.out', 'w') as f:
+        for result in results:
+            f.write(f"{result}\n")
+
+if __name__ == "__main__":
+    kdsmain()
+    sys.exit(0)
+```
