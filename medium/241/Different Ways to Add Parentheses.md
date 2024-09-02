@@ -66,7 +66,176 @@ In conclusion, this problem is a beautiful example of how breaking down a comple
 
 The approach we've discussed provides a solid foundation for solving this problem, but it's worth noting that there are always opportunities for optimization and refinement. As with many problems in computer science, the journey of solving it often teaches us as much as the final solution itself.
 
+
 **Top Down**
+
+
+Core Algorithm Overview:
+
+The central idea of this approach is to recursively break down the expression into smaller subexpressions, compute all possible results for these subexpressions, and then combine them in all possible ways. We use memoization to avoid redundant calculations, which is a key optimization in this solution.
+
+Let's start with a high-level pseudo-code of the main function:
+
+```
+function diffWaysToCompute(expression):
+    initialize 2D array memo[length][length]
+    return evaluateExpression(0, length - 1)
+
+function evaluateExpression(startIndex, endIndex):
+    if memo[startIndex][endIndex] is not null:
+        return memo[startIndex][endIndex]
+    
+    results = new List()
+    containsOperator = false
+    
+    for i from startIndex to endIndex:
+        if expression[i] is an operator:
+            containsOperator = true
+            leftResults = evaluateExpression(startIndex, i - 1)
+            rightResults = evaluateExpression(i + 1, endIndex)
+            
+            for each leftValue in leftResults:
+                for each rightValue in rightResults:
+                    result = apply operator at i to leftValue and rightValue
+                    add result to results
+    
+    if not containsOperator:
+        parse number from startIndex to endIndex
+        add parsed number to results
+    
+    memo[startIndex][endIndex] = results
+    return results
+```
+
+Now, let's break down each part of this algorithm and explain the reasoning behind it.
+
+1. Memoization Setup:
+
+We use a 2D array `memo` to store the results of subexpressions. The indices of this array correspond to the start and end indices of subexpressions in the original expression string.
+
+```
+initialize 2D array memo[length][length]
+```
+
+This memoization is crucial for the efficiency of our algorithm. Without it, we would end up recalculating the same subexpressions multiple times, leading to exponential time complexity. With memoization, we calculate each subexpression only once and reuse the results, significantly reducing the time complexity.
+
+2. Recursive Function - evaluateExpression:
+
+This is the heart of our algorithm. It takes two parameters: `startIndex` and `endIndex`, which define the boundaries of the current subexpression we're evaluating.
+
+```
+function evaluateExpression(startIndex, endIndex):
+```
+
+The function aims to compute all possible results for the subexpression from `startIndex` to `endIndex` in the original expression.
+
+3. Memoization Check:
+
+Before doing any computation, we first check if we've already calculated the results for this subexpression:
+
+```
+if memo[startIndex][endIndex] is not null:
+    return memo[startIndex][endIndex]
+```
+
+This check is what turns our recursive algorithm into a dynamic programming solution. If we've seen this subexpression before, we can immediately return the cached results, avoiding redundant calculations.
+
+4. Iterating Through the Subexpression:
+
+We iterate through each character in the current subexpression:
+
+```
+for i from startIndex to endIndex:
+    if expression[i] is an operator:
+```
+
+This loop is looking for operators (+, -, *) in the current subexpression. Each operator represents a potential splitting point for our divide-and-conquer strategy.
+
+5. Divide and Conquer:
+
+When we find an operator, we split the expression at that point and recursively evaluate the left and right subexpressions:
+
+```
+leftResults = evaluateExpression(startIndex, i - 1)
+rightResults = evaluateExpression(i + 1, endIndex)
+```
+
+This is the "divide" part of our divide-and-conquer approach. We're breaking down the problem into smaller subproblems.
+
+6. Combining Results:
+
+After getting the results from the left and right subexpressions, we combine them using the current operator:
+
+```
+for each leftValue in leftResults:
+    for each rightValue in rightResults:
+        result = apply operator at i to leftValue and rightValue
+        add result to results
+```
+
+This is the "conquer" part of our strategy. We're combining the solutions of our subproblems to solve the larger problem. We consider all possible combinations of results from the left and right subexpressions, applying the operator to each pair.
+
+7. Base Case - Single Number:
+
+If we don't find any operators in the current subexpression, it means we're dealing with a single number:
+
+```
+if not containsOperator:
+    parse number from startIndex to endIndex
+    add parsed number to results
+```
+
+This is our base case. When we reach a subexpression that's just a number, we parse it and return it as the only possible result for this subexpression.
+
+8. Memoization Storage:
+
+Before returning, we store the computed results in our memoization array:
+
+```
+memo[startIndex][endIndex] = results
+return results
+```
+
+This step ensures that if we ever need to evaluate this same subexpression again, we can retrieve the results directly from `memo` instead of recomputing them.
+
+Mathematical and Logical Concepts:
+
+1. Associativity of Operations:
+   The core idea behind this problem is the associativity of arithmetic operations. For example, in the expression "2-1-1", we can compute it as (2-1)-1 or 2-(1-1), leading to different results. Our algorithm systematically explores all these possibilities.
+
+2. Recursive Problem Decomposition:
+   We're using the mathematical principle that an expression can be evaluated by:
+   a) Evaluating its subexpressions
+   b) Combining the results using the operators
+   This naturally leads to a recursive solution.
+
+3. Combinatorial Explosion and Memoization:
+   The number of ways to parenthesize an expression grows exponentially with the number of operators. However, many of these parenthesizations lead to the same numerical results. Memoization allows us to store and reuse these results, dramatically reducing the effective complexity of our solution.
+
+4. Dynamic Programming Principle of Optimal Substructure:
+   Our solution leverages the fact that the optimal solution to the larger problem (evaluating the whole expression) can be constructed from optimal solutions to its subproblems (evaluating subexpressions). This is a key principle of dynamic programming.
+
+Time and Space Complexity Analysis:
+
+Time Complexity: 
+Without memoization, the time complexity would be exponential, roughly O(3^n) where n is the number of operators in the expression. This is because for each operator, we have three choices: make it the root of the current expression tree, or recurse on the left or right subexpression.
+
+With memoization, we significantly reduce this. In the worst case, we fill out the entire memo table, which has O(n^2) entries (one for each possible subexpression). For each entry, we might need to consider all possible split points, which is O(n). So the overall time complexity becomes O(n^3).
+
+Space Complexity:
+The space complexity is O(n^2) for the memoization table, plus the recursion stack depth of O(n). The actual space used might be less due to the constraint that the number of unique results doesn't exceed 10^4.
+
+Potential Optimizations and Extensions:
+
+1. Parsing Optimization: We could potentially optimize the parsing of numbers by pre-processing the expression to identify all numbers and operators upfront.
+
+2. Operator Precedence: If we wanted to respect standard operator precedence (e.g., multiplication before addition), we'd need to modify our algorithm to prioritize certain operators.
+
+3. Additional Operators: The current structure allows for easy addition of new operators. We'd just need to extend the operator application logic.
+
+4. Parallel Processing: The recursive nature of this algorithm lends itself well to parallel processing. Different branches of the recursion tree could potentially be evaluated concurrently.
+
+In conclusion, this solution elegantly combines recursive thinking with dynamic programming to solve a problem that at first glance might seem to require brute-force enumeration of all possibilities. By breaking down the expression into subexpressions and memoizing results, we achieve a solution that is both correct and efficient. The approach demonstrates the power of divide-and-conquer strategies in reducing complex problems to manageable subproblems, and showcases how dynamic programming can optimize recursive solutions by eliminating redundant calculations.
 ```java []
 class Solution {
     private List<Integer>[][] memo;
@@ -739,7 +908,158 @@ The journey from our initial recursive solution to this final dynamic programmin
 
 This problem and our approach to solving it touch on fundamental concepts in computer science and mathematics, from expression parsing to dynamic programming. It's a testament to the power of breaking complex problems into manageable subproblems and systematically building up to a comprehensive solution. As we solve more problems like this, we develop a toolkit of techniques and intuitions that we can apply to a wide range of computational challenges.
 
-Approach 3 Bootom up optimized
+### Approach 3 Bootom up optimized
+Let's dive into a comprehensive explanation of our final approach to solving the problem of computing all possible results from different groupings of numbers and operators in an expression. This solution leverages dynamic programming and careful preprocessing to efficiently tackle the problem.
+
+Core Algorithm Overview:
+Our approach can be broken down into three main steps:
+1. Preprocessing the expression
+2. Initializing the dynamic programming table
+3. Filling the dynamic programming table
+
+Let's examine each of these steps in detail:
+
+1. Preprocessing the Expression:
+Before we begin our main computation, we parse the input expression into two separate lists: one for numbers and one for operators. This preprocessing step allows us to work with clean, easily manipulable data in our main algorithm.
+
+Pseudo-code for preprocessing:
+
+```
+function parseExpression(expression):
+    numbers = empty list
+    operators = empty list
+    currentNumber = 0
+    
+    for each character c in expression:
+        if c is a digit:
+            currentNumber = currentNumber * 10 + (c as integer)
+        else:
+            numbers.add(currentNumber)
+            currentNumber = 0
+            operators.add(c)
+    
+    numbers.add(currentNumber)  // Add the last number
+    
+    return numbers, operators
+```
+
+This preprocessing step is crucial because it simplifies our main algorithm. Instead of constantly parsing the string during computation, we can work directly with numbers and operators. It also handles multi-digit numbers correctly, which is an important consideration for this problem.
+
+2. Initializing the Dynamic Programming Table:
+Our dynamic programming table is a 2D structure where each cell [i][j] represents all possible results for the subexpression from the i-th number to the j-th number (inclusive).
+
+Pseudo-code for initialization:
+
+```
+function initializeTable(numbers):
+    n = length of numbers
+    table = new 2D array of size n x n, initialized with empty lists
+    
+    for i from 0 to n-1:
+        table[i][i] = [numbers[i]]
+    
+    return table
+```
+
+This initialization sets up our base cases. Each number by itself is a valid subexpression with only one possible result.
+
+3. Filling the Dynamic Programming Table:
+This is the heart of our algorithm. We systematically fill the table, building up from smaller subexpressions to larger ones.
+
+Pseudo-code for filling the table:
+
+```
+function fillTable(numbers, operators, table):
+    n = length of numbers
+    
+    for len from 2 to n:
+        for i from 0 to n - len:
+            j = i + len - 1
+            for k from i to j-1:
+                leftResults = table[i][k]
+                rightResults = table[k+1][j]
+                op = operators[k]
+                
+                for each leftValue in leftResults:
+                    for each rightValue in rightResults:
+                        result = applyOperator(leftValue, rightValue, op)
+                        table[i][j].add(result)
+    
+    return table[0][n-1]  // Results for the entire expression
+
+function applyOperator(left, right, op):
+    if op is '+':
+        return left + right
+    else if op is '-':
+        return left - right
+    else if op is '*':
+        return left * right
+    else:
+        throw error "Invalid operator"
+```
+
+Let's break down this core algorithm and understand why it works:
+
+1. We iterate over all possible lengths of subexpressions, from 2 to n (where n is the number of numbers in the expression).
+
+2. For each length, we consider all possible starting positions i.
+
+3. For each subexpression from i to j, we try all possible ways to split it into two parts.
+
+4. For each split point k, we combine all results from the left part (i to k) with all results from the right part (k+1 to j) using the operator at position k.
+
+5. We store all these combined results in table[i][j].
+
+The magic of this approach lies in its systematic build-up from smaller subproblems to larger ones. By the time we need to compute the results for a large subexpression, we've already computed and stored the results for all its possible smaller components.
+
+Mathematical Intuition:
+Let's formalize the logic behind this approach mathematically. Define f(i,j) as the set of all possible results for the subexpression from the i-th number to the j-th number.
+
+Base case: f(i,i) = {numbers[i]}
+
+Recurrence relation: For i < j,
+f(i,j) = { x | x = a op b, where a ∈ f(i,k), b ∈ f(k+1,j), and operators[k] = op, for all k where i ≤ k < j }
+
+This recurrence relation captures the essence of our algorithm. We're building up our solution by combining results from smaller subproblems in all possible ways.
+
+Why This Approach Works:
+1. Completeness: By considering all possible split points and combining all results from the left and right sides, we ensure that we generate all possible results for each subexpression.
+
+2. Optimal Substructure: The result for a larger expression can be computed from the results of its smaller components. This property is crucial for the validity of our dynamic programming approach.
+
+3. Overlapping Subproblems: Many subexpressions are reused in different larger expressions. By storing the results for each subexpression, we avoid redundant computations.
+
+4. Bottom-up Computation: By building up from smaller subexpressions to larger ones, we ensure that when we need to compute a result, all its components have already been computed.
+
+Time and Space Complexity Analysis:
+Time Complexity: O(n^3 * 4^n) in the worst case, where n is the number of numbers in the expression.
+- We have three nested loops: for length (n iterations), for start position (n iterations), and for split point (n iterations).
+- At each step, we might be combining two lists of results, each potentially having up to 4^(n/2) elements in the worst case.
+- However, the problem constraints limit the number of different results to 10^4, so in practice, the complexity is closer to O(n^3).
+
+Space Complexity: O(n^2 * m), where m is the maximum number of different results for any subexpression (limited to 10^4 by the problem constraints).
+- We use a 2D table of size n x n, where each cell can contain up to m results.
+
+Handling Edge Cases and Constraints:
+1. Single Number: Handled naturally by our base case initialization.
+2. Maximum Expression Length (20): We can use this to optimize our table size if needed.
+3. Maximum Number Value (99): This doesn't affect our algorithm directly but helps bound the range of possible results.
+4. Maximum Number of Different Results (10^4): This constraint keeps our space complexity manageable.
+
+Potential Optimizations:
+1. Result Deduplication: If many operations lead to the same result, we could use a set instead of a list to store unique results.
+2. Early Termination: If we reach the maximum number of different results for a subexpression, we could stop generating more.
+3. Parallelization: The computations for different cells in the same diagonal of our table are independent and could potentially be parallelized.
+
+In conclusion, this solution elegantly combines preprocessing, dynamic programming, and systematic computation to solve a complex problem efficiently. By breaking down the expression into smaller subproblems and building up the solution methodically, we ensure that we consider all possibilities without redundant computation.
+
+This approach demonstrates key problem-solving principles:
+1. Simplify the input (preprocessing)
+2. Break the problem into smaller, manageable subproblems (dynamic programming)
+3. Build the solution systematically from bottom to top
+4. Use stored results to avoid redundant computations
+
+Understanding this solution provides insights applicable to a wide range of problems involving expression evaluation, combinatorial generation, and dynamic programming. The techniques used here – like the way we parse the input, structure our dynamic programming table, and systematically build up our solution – can be adapted to solve many related problems in algorithm design and computation.
 ```Java []
 class Solution {
     private static final int MAX_EXPRESSION_LENGTH = 20;
