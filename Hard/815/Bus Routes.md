@@ -1,93 +1,47 @@
 ### Intuition
+I'll try to explain the problem first to understand it try to imagine that you're in a busy city with bus system. Here Each bus follows a fixed route while looping through a many stops indefinitely and Your job is to find out how to get from one point in the city (let's call it the source) to another (the target) using the smallest number of bus rides possible.
 
-
-## Understanding the Challenge
-
-Imagine you're in a bustling city with an intricate bus system. Each bus follows a fixed route, looping through a series of stops indefinitely. Your task is to figure out how to get from one point in the city (let's call it the source) to another (the target) using the fewest number of bus rides possible. It's like solving a puzzle where the pieces are bus routes, and you need to connect them in the most efficient way.
-
-The challenge becomes more interesting when you consider the constraints:
+consider the constraints:
 - There could be up to 500 different bus routes.
 - Each route could have up to 100,000 stops.
 - The bus stop numbers could be quite large, up to 1,000,000.
 
-These constraints tell us that we're dealing with a potentially vast transportation network. It's not just about finding any path from source to target; it's about finding the optimal path in a complex system.
+We're dealing with a very big transportation network. It's not just about finding any path from source to target but also about finding the optimal path in a complex system. So let's reframe it in a way that makes it more manageable Think of the bus system as a graph. Each bus stop is a node and each bus route creates edges between the stops it serves. Our job is to find the shortest path in this graph where the distance is measured in the number of bus changes and not physical distance. We're not just looking for a route we're analyzing the connectivity of the entire bus network. How do different routes intersect, Which stops serve as key transfer points
 
-## Reframing the Problem
+The points where different bus routes intersect are important. These are our transfer points and they'll help in finding efficient paths through the network. Instead of physical distance, we need to think in terms of "hops" from one route to another. Each hop represents a bus change. A bus route can be traveled in both directions which means that if we can reach any stop on a route then we can reach all stops on that route with no additional bus changes and we start at the source stop not on any bus. Our job is to reach the target stop. The path between these two states is what we need to optimize.
 
-To tackle this challenge, let's reframe it in a way that makes it more manageable:
 
-1. **Graph Perspective**: Think of the bus system as a graph. Each bus stop is a node, and each bus route creates edges between the stops it serves. Our job is to find the shortest path in this graph, where the distance is measured in the number of bus changes, not physical distance.
+Our first step could be to create a representation of the entire bus network. We need to know which stops are connected by which routes and in this problem our "distance" isn't physical but is measured in the number of bus changes How can we keep track of this as we explore the network We need a way to systematically explore the network by starting from our source stop try to think what's an efficient way to do this that makes sure we find the optimal path, as we explore, we need to continually update and optimize our paths. How can we ensure we're always working with the best known path to each stop, When do we know we've found the best solution or when can we conclude that no solution exists
 
-2. **Connectivity Analysis**: We're not just looking for a route; we're analyzing the connectivity of the entire bus network. How do different routes intersect? Which stops serve as key transfer points?
 
-3. **Optimization Challenge**: At its core, this is an optimization problem. We're trying to minimize a specific metric: the number of bus rides needed to reach our destination.
 
-## Key Observations and Insights
+Let's talk about some mathematical concepts  We can think of our bus network as a graph G = (V, E), where V is the set of all bus stops and E is the set of connections between stops (bus routes). Our job is basically finding the shortest path in a weighted graph, where the weight of each edge is 1 (representing one bus change). As we explore the network, we can use dynamic programming principles to store and update the best known path to each stop.So let's consider an approach Start by assuming that it takes an infinite number of buses to reach any stop except for the source (which takes 0 buses to reach) and for each bus route, look at all the stops on that route. If we can reach any stop on the route in fewer buses than we thought update our estimate for all stops on that route. Keep looping through all routes until you make no more updates. This means you have found the optimal number of buses to reach each stop. After youve finished iterating, check how many buses it takes to reach the target stop. If it's still "infinite," there's no path. Since It's based on the idea that if we can reach one stop on a route, we can reach all stops on that route with at most one additional bus ride. By repeatedly applying this logic, we'll eventually find the shortest path to all reachable stops.
 
-As we start to think about solving this problem, several key insights emerge:
 
-1. **Route Intersections are Crucial**: The points where different bus routes intersect are pivotal. These are our transfer points, and they'll be key in finding efficient paths through the network.
-
-2. **Thinking in "Hops"**: Instead of physical distance, we need to think in terms of "hops" from one route to another. Each hop represents a bus change.
-
-3. **Bidirectional Nature**: A bus route can be traveled in both directions. This means that if we can reach any stop on a route, we can reach all stops on that route with no additional bus changes.
-
-4. **Initial State vs. Goal State**: We start at the source stop, not on any bus. Our goal is to reach the target stop. The path between these two states is what we need to optimize.
-
-## Developing a Solution Strategy
-
-Now that we've reframed the problem and made some key observations, let's think about how we might approach solving it:
-
-1. **Mapping the Network**: Our first step could be to create a representation of the entire bus network. We need to know which stops are connected by which routes.
-
-2. **Distance Metric**: In this problem, our "distance" isn't physical but is measured in the number of bus changes. How can we keep track of this as we explore the network?
-
-3. **Exploration Strategy**: We need a way to systematically explore the network, starting from our source stop. What's an efficient way to do this that ensures we find the optimal path?
-
-4. **Optimization Process**: As we explore, we need to continually update and optimize our paths. How can we ensure we're always working with the best known path to each stop?
-
-5. **Termination Conditions**: When do we know we've found the best solution? Or when can we conclude that no solution exists?
-
-## Mathematical Insights
-
-Let's delve into some mathematical concepts that can help us formalize our approach:
-
-1. **Graph Theory**: We can represent our bus network as a graph G = (V, E), where V is the set of all bus stops and E is the set of connections between stops (bus routes).
-
-2. **Shortest Path Problem**: Our task is essentially finding the shortest path in a weighted graph, where the weight of each edge is 1 (representing one bus change).
-
-3. **Breadth-First Search (BFS)**: The nature of our problem, where we're looking for the path with the fewest "hops," suggests that a BFS-like approach could be effective.
-
-4. **Dynamic Programming**: As we explore the network, we can use dynamic programming principles to store and update the best known path to each stop.
-
-## Proposed Approach: Iterative Relaxation
-
-Based on our insights and mathematical understanding, let's consider an approach I'll call "Iterative Relaxation." Here's how it works:
-
-1. **Initialize**: Start by assuming it takes an infinite number of buses to reach any stop except the source (which takes 0 buses to reach).
-
-2. **Iterate through Routes**: For each bus route, look at all the stops on that route. If we can reach any stop on the route in fewer buses than we thought, update our estimate for all stops on that route.
-
-3. **Repeat**: Keep iterating through all routes until we make no more updates. This means we've found the optimal number of buses to reach each stop.
-
-4. **Check Result**: After we've finished iterating, check how many buses it takes to reach the target stop. If it's still "infinite," there's no path.
-
-Why might this approach work? It's based on the idea that if we can reach one stop on a route, we can reach all stops on that route with at most one additional bus ride. By repeatedly applying this logic, we'll eventually find the shortest path to all reachable stops.
 
 ## Mathematical Formulation
 
-Let's formalize this approach mathematically:
-
 1. Let B[i] be the minimum number of buses needed to reach stop i.
+
 2. Initialize B[source] = 0, and B[i] = ∞ for all other i.
+
 3. For each route R:
-   - Let m = min(B[i] for i in R)
-   - For each stop j in R:
-     - B[j] = min(B[j], m + 1)
+
+  - Let m = min(B[i] for i in R)
+
+  - For each stop j in R:
+
+   - B[j] = min(B[j], m + 1)
+
 4. Repeat step 3 until no changes are made.
+
 5. The answer is B[target] if B[target] < ∞, else -1.
 
-This formulation captures the essence of our iterative relaxation approach.
+
+
+
+
+
 
 ## Handling Edge Cases and Potential Pitfalls
 
