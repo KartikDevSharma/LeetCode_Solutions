@@ -169,6 +169,25 @@ class Solution:
         def update_max_distance(self):
             self.max_distance_squared = max(self.position_x**2 + self.position_y**2, self.max_distance_squared)
 
+def main():
+    input_data = sys.stdin.read().strip()
+    test_cases = input_data.split('\n')
+    results = []
+    
+    for i in range(0, len(test_cases), 2):
+        instructions = json.loads(test_cases[i])
+        obstacles = json.loads(test_cases[i+1])
+        results.append(Solution().robotSim(instructions, obstacles))
+    
+    with open('user.out', 'w') as f:
+        for result in results:
+            f.write(f"{result}\n")
+
+if __name__ == "__main__":
+    main()
+    exit(0)
+#kartikdevsharmaa
+
 
 ```
 ```Go []
