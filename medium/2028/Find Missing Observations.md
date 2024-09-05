@@ -1,7 +1,4 @@
 ### Intuition
-Certainly! Let's dive into a comprehensive intuition for your approach to the missing dice rolls problem. I'll walk through the thought process, discussing the evolution of ideas and key insights that lead to the solution.
-
-Understanding the Problem
 
 Let's start by breaking down what we're really being asked to do here. We have a scenario where we've rolled some dice, but we've lost track of a few of the results. We know how many dice we rolled in total (n + m), how many results we still have (m), and what the average value of all the rolls was (mean). Our job is to figure out what those missing rolls (n) could have been.
 
@@ -70,7 +67,7 @@ This approach demonstrates the power of stepping back and looking at the big pic
 As we solve problems like this, it's crucial to always be on the lookout for such simplifying insights. Often, the key to an elegant solution lies not in complex algorithms, but in recognizing patterns and relationships within the problem itself.
 
 ### Appraoch 
-Certainly! Let's dive into a comprehensive explanation of the approach and implementation for solving the "Missing Dice Rolls" problem. We'll focus on the underlying logic and concepts, using language-agnostic explanations and pseudo-code to illustrate key points.
+
 
 Problem Overview:
 Before we delve into the solution, let's recap the problem:
