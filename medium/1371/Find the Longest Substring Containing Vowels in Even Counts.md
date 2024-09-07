@@ -1,7 +1,5 @@
 ### Appraoch 1 o(n^2)
 ```Java []
-import java.util.*;
-
 class Solution {
     public int findTheLongestSubstring(String text) {
         Map<Character, Integer> vowelCount = new HashMap<>();
@@ -78,11 +76,6 @@ class Solution {
 
 ```
 ```C++ []
-#include <string>
-#include <unordered_map>
-#include <vector>
-#include <algorithm>
-
 class Solution {
 public:
     int findTheLongestSubstring(string text) {
