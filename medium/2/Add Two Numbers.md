@@ -1,119 +1,242 @@
 
-# The Problem Overview:
+### Intuition
+We're being asked to add two numbers. But these numbers are represented as linked lists and not just any linked lists but ones where:
 
-*Imagine you have two really big numbers. Instead of writing these numbers normally, we write them in a special way:*
+> a) The digits are in reverse order
+ b) Each node contains a single digit
 
-     We split each number into single digits.
-     We reverse the order of these digits.
-     We store each digit in a "node" of a linked list.
+This representation immediately raises some interesting questions. Why reverse order? How does this change our typical approach to addition? Let's consider a simple example:
 
-Your job is to add these two numbers together and present the answer in the same special format.
+342 + 465 = 807
+In our linked list representation, this becomes: [2,4,3] + [5,6,4] = [7,0,8]
 
-Let's go through this step-by-step:
+Do you see what's happening here? The least significant digits (2 and 5) are at the head of the list. This is actually quite convenient for addition, isn't it In normal addition we start from the right-most digits and work our way left. Here we can start from the head of the list and work our way through.
 
-**1. Understanding the Input:**
-   - You're given two linked lists, let's call them l1 and l2.
-   - Each node in these lists contains a single digit (from 0 to 9).
-   - The digits are in reverse order.
 
-**2. What "reverse order" means:**
-   - If the actual number is 342, the linked list will be [2,4,3].
-   - The least significant digit (2) is at the start of the list.
-   - The most significant digit (3) is at the end of the list.
+Try to convert these linked lists back into regular integers add them, and then convert the result back into a linked list. But let's think about that for a moment. What if the numbers are really large? We might run into integer overflow issues.
 
-**3. The Addition Process:**
-   - You need to add these numbers as if they were normal numbers.
-   - But you're working with them in this reversed, linked list format.
+So, we need to work with the linked list representation directly. But how?
 
-**4. The Output:**
-   - Your answer should also be in the form of a reversed linked list.
+Remember how we do addition by hand? We start from the right-most digit, add the corresponding digits from both numbers, carry over any excess to the next column, and repeat. Can we mimic this process with our linked lists?
 
-**5. Examples Explained:**
-   Example 1: 
-   - l1 = [2,4,3] represents 342
-   - l2 = [5,6,4] represents 465
-   - 342 + 465 = 807
-   - So, the output should be [7,0,8] (807 in reverse)
 
-   Example 2:
-   - Both inputs are [0], representing the number 0
-   - 0 + 0 = 0
-   - Output is [0]
 
-   Example 3:
-   - l1 = [9,9,9,9,9,9,9] represents 9999999
-   - l2 = [9,9,9,9] represents 9999
-   - 9999999 + 9999 = 10009998
-   - Output is [8,9,9,9,0,0,0,1] (10009998 in reverse)
+Let's think about the mathematical properties at play here. When we add two single-digit numbers, what's the maximum possible result? 9 + 9 = 18. So our sum can be at most two digits.
 
-**6. Things to Keep in Mind:**
-   - You might need to carry over digits when adding (like in regular addition).
-   - The result might have more digits than either of the input numbers.
-   - You don't need to worry about leading zeros (except for the number 0 itself).
+This gives us an important insight: at each step of our addition, we'll have:
+- A sum of two digits (0-18)
+- A single-digit result (0-9)
+- A potential carry (0 or 1)
 
----
+Mathematically, we can express this as:
 
-# Intuition
+$result = (digit1 + digit2 + carry) % 10$
+$newcarry = (digit1 + digit2 + carry) / 10$  (integer division)
 
-When we first look at this problem, we might think: "this is just like adding two numbers, but with a twist!" And that's exactly right. 
+This forms the core of our addition algorithm. Now that we understand the mathematical foundation, how do we apply this to our linked lists? We could traverse both lists simultaneously, adding corresponding digits (and the carry from the previous step). But what if the lists are of different lengths? we need to continue our addition process as long as there are digits left in either list, or if there's a carry left over.
 
-The twist is that our numbers are:
-1. Stored in linked lists
-2. In reverse order
+So, our process might look something like this:
 
-So, 342 is stored as 2 -> 4 -> 3, and 465 is stored as 5 -> 6 -> 4.
+    1. Start at the head of both lists
+    2. While there are still digits in either list or a carry:
+    a. Get the digit from list1 (if available, else use 0)
+    b. Get the digit from list2 (if available, else use 0)
+    c. Add these digits and the carry
+    d. Create a new node with the result % 10
+    e. Update the carry for the next iteration
+    f. Move to the next nodes in both lists (if available)
 
-The good news is that this reverse order actually makes our job easier! Why? Because when we add numbers by hand, we start from the rightmost digits. Here, those digits are conveniently at the start of our lists.
 
-Our plan of attack is to traverse both lists simultaneously, adding the digits as we go, just like we'd do on paper. We'll keep track of any carry-over, and build our result in a new linked list.
+
+We also need to consider some edge cases:
+
+- What if one list is longer than the other? 
+  Our approach of using 0 when a list runs out handles this.
+
+- What if we have a carry after processing all digits?
+  We need to ensure our loop continues even if both lists are exhausted, as long as there's a carry.
+
+- What about leading zeros? 
+  The problem states we don't have to worry about this, except for the number 0 itself.
+
+- Empty lists?
+  The problem specifies non-empty lists, but it's good to keep in mind.
+
+
+If you think through this process, you might think how do we build our result list? We could start from the head, but that would require us to reverse our result at the end (remember, least significant digit comes first).A common technique in linked list problems is to use a dummy head node. This simplifies our list building process:
+
+>   1 Create a dummy node
+    2. Maintain a "current" pointer, starting at the dummy node
+    3. As we calculate each digit of the result, add it as a new node after the current node
+    4. Move the current pointer to this new node
+    5. At the end, our result is dummy.next (skipping the dummy node itself)
+
+This will allows us to build our result list in the correct order as we go, without needing to reverse it at the end.
+
+
+
+Our approach works directly with the linked list representation, avoiding potential integer overflow issues. It mimics the grade-school addition process, which is intuitive and easy to understand. It handles lists of different lengths naturally, without needing separate logic. The use of a dummy head simplifies our list-building process.
+
+The reverse order of digits actually works in our favor aligning perfectly with how we perform addition from right to left.
+
+
 
 # Approach
 
-Let's break down our approach step by step:
 
-**1. Initialize a dummy node:** This gives us a starting point for our result list. It's a common trick in linked list problems to simplify edge cases.
+As we have already talked that we're asked to add two numbers the numbers are represented as linked lists where each node contains a single digit, and the digits are in reverse order. For example:
 
-**2. Initialize a current pointer:** This will help us build our result list as we go.
+342 + 465 = 807
+Is represented as:
+[2,4,3] + [5,6,4] = [7,0,8]
 
-**3. Initialize a carry variable:** This will keep track of any carry-over from adding digits.
+This reverse order is key to our solution, as it aligns perfectly with how we typically perform addition: from right to left (least significant digit to most significant digit).
 
-**4. Traverse the lists:** We'll go through both input lists and the carry simultaneously. We keep going as long as there are digits left in either list or we have a carry.
 
-**5. For each step of our traversal:**
-   - Sum up the current digits from both lists (if available) and the carry.
-   - Create a new node with the ones digit of this sum (sum % 10).
-   - Update the carry for the next iteration (sum / 10).
-   - Move our pointers forward.
 
-**6. Return the result:** Remember to skip the dummy node we created at the start.
+Let's break it down into a high-level algorithm:
 
-Let's see this in action with our example of 342 + 465:
-
-```
-Initial state: dummy -> (empty)
-               ^
-               current
-
-Step 1: 2 + 5 = 7
-        dummy -> 7
-                 ^
-                 current
-
-Step 2: 4 + 6 = 10
-        dummy -> 7 -> 0
-                      ^
-                      current
-        (carry = 1)
-
-Step 3: 3 + 4 + 1 (carry) = 8
-        dummy -> 7 -> 0 -> 8
-                           ^
-                           current
-
-Final result: 7 -> 0 -> 8 (which is 807)
+```pseudocode
+function addTwoNumbers(l1, l2):
+    initialize dummy node
+    initialize current pointer to dummy node
+    initialize carry to 0
+    
+    while l1 is not null OR l2 is not null OR carry is not 0:
+        calculate sum of current digits and carry
+        create new node with ones digit of sum
+        update carry for next iteration
+        move to next digits in both lists (if available)
+    
+    return dummy.next as head of result list
 ```
 
-This approach is efficient because it handles different list lengths and final carries naturally. We just keep going until we've processed everything.
+
+
+
+
+**a) Dummy Node and Current Pointer:**
+
+```pseudocode
+dummy = new ListNode(0)
+current = dummy
+```
+
+The dummy node is a crucial technique in linked list problems. It serves as a placeholder at the beginning of our result list, simplifying the process of building the list. Here's why it's valuable:
+
+- It eliminates the need for special case handling of the first node.
+- It provides a consistent starting point for our result list.
+- At the end, dummy.next will be the head of our actual result list.
+
+The current pointer keeps track of where we are in building our result list. We start it at the dummy node and move it as we add new nodes.
+
+**b) Carry Variable:**
+
+```pseudocode
+carry = 0
+```
+
+The carry variable is fundamental to the addition process. In decimal addition, when the sum of two digits exceeds 9, we "carry" 1 to the next column. Our carry variable simulates this process.
+
+- It's initialized to 0 at the start.
+- After each digit addition, it will hold any value that needs to be carried to the next column (0 or 1).
+
+**c) Main Loop:**
+
+```pseudocode
+while l1 is not null OR l2 is not null OR carry is not 0:
+```
+
+This loop condition is crucial for handling various scenarios:
+
+- It continues as long as there are digits left in either list (l1 or l2 is not null).
+- It also continues if there's a remaining carry, even if both lists are exhausted.
+
+This condition ensures we process all digits and handle cases where the result has more digits than either input number (e.g., 999 + 1 = 1000).
+
+**d) Sum Calculation:**
+
+```pseudocode
+sum = carry
+if l1 is not null:
+    sum += l1.value
+    l1 = l1.next
+if l2 is not null:
+    sum += l2.value
+    l2 = l2.next
+```
+
+This step calculates the sum for the current digit position:
+
+- We start with the carry from the previous iteration.
+- We add the current digit from l1 if available (if not, it's effectively 0).
+- We add the current digit from l2 if available (if not, it's effectively 0).
+- We move to the next node in each list if available.
+
+This approach elegantly handles lists of different lengths without needing separate logic.
+
+**e) New Node Creation:**
+
+```pseudocode
+current.next = new ListNode(sum % 10)
+current = current.next
+```
+
+Here's where we build our result list:
+
+- sum % 10 gives us the ones digit of our sum (0-9), which is what we want for our current result digit.
+- We create a new node with this value and attach it to our result list.
+- We move our current pointer to this new node, preparing for the next iteration.
+
+**f) Carry Update:**
+
+```pseudocode
+carry = sum / 10  (integer division)
+```
+
+This step prepares the carry for the next iteration:
+
+- Integer division by 10 gives us the tens digit of our sum (0 or 1).
+- This becomes the carry for the next column, just like in manual addition.
+
+
+
+**When we add two decimal numbers:**  We add digits in each place value (ones, tens, hundreds, etc.) separately and If the sum in any place value is 10 or greater, we keep the ones digit in that place and carry the tens digit to the next place value.
+
+Our algorithm mimics this process:
+>- sum % 10 gives us the ones digit (0-9) for our current place value.
+>- sum / 10 (integer division) gives us the carry (0 or 1) for the next place value.
+
+This approach works because:
+$(a + b)$ % 10 = (($a$ % 10) + ($b$ % 10)) % 10
+
+This property allows us to process each digit independently, carrying over any excess to the next digit.
+
+
+
+Our algorithm naturally handles several edge cases:
+
+>**a) Lists of Different Lengths:**
+By checking if each list is null before adding its digit, we effectively treat exhausted lists as having 0 in each subsequent place value. This eliminates the need for separate logic to handle different list lengths.
+
+>**b) Carry Propagation:**
+Including carry != 0 in our loop condition ensures we continue adding nodes even if both lists are exhausted but we still have a carry. This handles cases like:
+  999 + 1 = 1000
+
+>**c) Single-Digit Numbers:**
+Our algorithm works seamlessly for single-digit numbers, including zero, without any special cases.
+
+>**d) Large Numbers:**
+By processing digits one at a time and using a linked list for the result, we avoid integer overflow issues that could occur if we tried to convert the entire number to an integer before adding.
+
+
+
+
+
+
+
+
+
 
 # Complexity
 
@@ -134,7 +257,6 @@ In practical terms: *Doubling the input size will roughly double the execution t
 ---
 
 # Code
-Java
 ```java []
 class Solution {
     public ListNode addTwoNumbers(ListNode l1, ListNode l2) {
@@ -163,28 +285,18 @@ class Solution {
     }
 }
 ```
-C++
+
 ```C++ []
-/**
- * Definition for singly-linked list.
- * struct ListNode {
- *     int val;
- *     ListNode *next;
- *     ListNode() : val(0), next(nullptr) {}
- *     ListNode(int x) : val(x), next(nullptr) {}
- *     ListNode(int x, ListNode *next) : val(x), next(next) {}
- * };
- */
 class Solution {
 public:
     ListNode* addTwoNumbers(ListNode* l1, ListNode* l2) {
         ListNode* dummy = new ListNode(0);
         ListNode* current = dummy;
         int carry = 0;
-
+        
         while (l1 != nullptr || l2 != nullptr || carry != 0) {
             int sum = carry;
-
+            
             if (l1 != nullptr) {
                 sum += l1->val;
                 l1 = l1->next;
@@ -193,197 +305,44 @@ public:
                 sum += l2->val;
                 l2 = l2->next;
             }
-
+            
+            carry = sum / 10;
             current->next = new ListNode(sum % 10);
             current = current->next;
-            carry = sum / 10;
         }
-
-        return dummy->next;
+        
+        ListNode* result = dummy->next;
+        delete dummy;  // Free the dummy node
+        return result;
     }
 };
 ```
-C++
-```C++ []
-//Optimized
-static const bool Booster = [](){
-    std::ios_base::sync_with_stdio(false);
-    std::cout.tie(nullptr);
-    std::cin.tie(nullptr);
-    return true;
-}();
 
-inline bool isDigit(const char c) {
-    return (c >= '0') && (c <= '9');
-}
-
-void parse_and_solve(const std::string& s1, const std::string& s2, std::ofstream& out) {
-    const int S1 = s1.size();
-    const int S2 = s2.size();
-    if (S1 < S2) {
-        parse_and_solve(s2, s1, out);
-        return;
-    }
-    int carry = 0;
-    int i = 0;
-    int j = 0;
-    while (i < S1 - 1) {
-        while (i < S1 && (!isDigit(s1[i]))) { ++i; }
-        while (j < S2 && (!isDigit(s2[j]))) { ++j; }
-        const int n1 = s1[i] - '0';
-        const int n2 = (j < S2) ? (s2[j] - '0') : 0;
-        const int n = carry + n1 + n2;
-        carry = n / 10;
-        out << (n % 10);
-        if (i < S1 - 2) {
-            out << ",";
-        }
-        ++i;
-        ++j;
-    }
-    if (carry > 0) {
-        out << "," << carry;
-    }
-}
-
-static bool Solve = [](){
-    std::ofstream out("user.out");
-    std::string s1, s2;
-    while (std::getline(std::cin, s1) && std::getline(std::cin, s2)) {
-        out << "[";
-        parse_and_solve(s1, s2, out);
-        out << "]\n";
-    }
-    out.flush();
-    exit(0);
-    return true;
-}();
-/**
- * Definition for single-linked list.
- * struct ListNode {
- *     int val;
- *     ListNode *next;
- *     ListNode() : val(0), next(nullptr) {}
- *     ListNode(int x) : val(x), next(nullptr) {}
- *     ListNode(int x, ListNode *next) : val(x), next(next) {}
- * };
- */
-class Solution {
-public:
-    ListNode* addTwoNumbers(ListNode* l1, ListNode* l2) {
-
-        ListNode* head = new ListNode(-1);
-        ListNode* temp = head;
-        int c = 0;
-        while (l1 != NULL && l2 != NULL) {
-            int sum = c + l1->val + l2->val;
-            if (sum > 9) {
-                c = sum / 10;
-                head->next = new ListNode(sum % 10);
-                head = head->next;
-            } else {
-                c = 0;
-                head->next = new ListNode(sum);
-                head = head->next;
-            }
-            l1 = l1->next;
-            l2 = l2->next;
-        }
-        while (l1 != NULL) {
-            int sum = c + l1->val;
-            if (sum > 9) {
-                c = sum / 10;
-                head->next = new ListNode(sum % 10);
-                head = head->next;
-            } else {
-                c = 0;
-                head->next = new ListNode(sum);
-                head = head->next;
-            }
-            l1 = l1->next;
-        }
-        while (l2 != NULL) {
-            int sum = c + l2->val;
-            if (sum > 9) {
-                c = sum / 10;
-                head->next = new ListNode(sum % 10);
-                head = head->next;
-            } else {
-                c = 0;
-                head->next = new ListNode(sum);
-                head = head->next;
-            }
-            l2 = l2->next;
-        }
-        if (c > 0) {
-            head->next = new ListNode(c);
-            head = head->next;
-        }
-        head->next = NULL;
-        return temp->next;
-    }
-};
-```
-Python
 ```Python []
-class ListNode:
-    def __init__(self, val=0, next=None):
-        self.val = val
-        self.next = next
-
 class Solution:
-    def addTwoNumbers(self, l1: ListNode, l2: ListNode) -> ListNode:
+    def addTwoNumbers(self, l1: Optional[ListNode], l2: Optional[ListNode]) -> Optional[ListNode]:
         dummy = ListNode(0)
         current = dummy
         carry = 0
-
+        
         while l1 or l2 or carry:
             sum = carry
-
+            
             if l1:
                 sum += l1.val
                 l1 = l1.next
             if l2:
                 sum += l2.val
                 l2 = l2.next
-
+            
+            carry = sum // 10
             current.next = ListNode(sum % 10)
             current = current.next
-            carry = sum // 10
-
-        return dummy.next
-```
-Python
-```Python []
-
-# Optimized
-class Solution:
-    def addTwoNumbers(self, l1: Optional[ListNode], l2: Optional[ListNode]) -> Optional[ListNode]:
-        dummy=ListNode()
-        curr=dummy
-        carry=0
-        while l1 or l2 or carry:
-            s=l1.val if l1 else 0
-            p=l2.val if l2 else 0
-            val=s+p+carry
-            carry=val//10
-            val=val%10
-            curr.next=ListNode(val)
-            curr=curr.next
-            l1=l1.next if l1  else None
-            l2=l2.next if l2  else None
+        
         return dummy.next
         
 ```
-JavaScript
 ```JavaScript []
-/**
- * Definition for singly-linked list.
- * function ListNode(val, next) {
- *     this.val = (val===undefined ? 0 : val)
- *     this.next = (next===undefined ? null : next)
- * }
- */
 /**
  * @param {ListNode} l1
  * @param {ListNode} l2
@@ -393,44 +352,37 @@ var addTwoNumbers = function(l1, l2) {
     let dummy = new ListNode(0);
     let current = dummy;
     let carry = 0;
-
-    while (l1 !== null || l2 !== null || carry !== 0) {
+    
+    while (l1 || l2 || carry) {
         let sum = carry;
-
-        if (l1 !== null) {
+        
+        if (l1) {
             sum += l1.val;
             l1 = l1.next;
         }
-        if (l2 !== null) {
+        if (l2) {
             sum += l2.val;
             l2 = l2.next;
         }
-
+        
+        carry = Math.floor(sum / 10);
         current.next = new ListNode(sum % 10);
         current = current.next;
-        carry = Math.floor(sum / 10);
     }
-
+    
     return dummy.next;
 };
 ```
-Go
+
 ```Go []
-/**
- * Definition for singly-linked list.
- * type ListNode struct {
- *     Val int
- *     Next *ListNode
- * }
- */
 func addTwoNumbers(l1 *ListNode, l2 *ListNode) *ListNode {
     dummy := &ListNode{Val: 0}
     current := dummy
     carry := 0
-
+    
     for l1 != nil || l2 != nil || carry != 0 {
         sum := carry
-
+        
         if l1 != nil {
             sum += l1.Val
             l1 = l1.Next
@@ -439,56 +391,44 @@ func addTwoNumbers(l1 *ListNode, l2 *ListNode) *ListNode {
             sum += l2.Val
             l2 = l2.Next
         }
-
+        
+        carry = sum / 10
         current.Next = &ListNode{Val: sum % 10}
         current = current.Next
-        carry = sum / 10
     }
-
+    
     return dummy.Next
 }
 ```
-Go
-```Go []
-// improved runtime 
-func addTwoNumbers(l1 *ListNode, l2 *ListNode) *ListNode {
-    valueRepresentation1, valueRepresentation2 := totalValue(l1), totalValue(l2)
-    value1 := new(big.Int)
-    value1, _ = value1.SetString(valueRepresentation1, 10)
-    value2 := new(big.Int)
-    value2, _ = value2.SetString(valueRepresentation2, 10)
-    total := new(big.Int)
-    total = total.Add(value1, value2)
+```Rust []
 
-    return newResultList(total.String())
-}
-
-
-func newResultList(totalValue string) *ListNode{
-
-    var result *ListNode
-    for i := 0; i < len(totalValue); i ++ {
-        val, _ := strconv.Atoi(string(totalValue[i]))
-
-        if i == 0 {
-            result = &ListNode{Val: val}
-        } else{
-            currentNode := &ListNode{Val: val}
-            currentNode.Next = result
-            result = currentNode
+impl Solution {
+    pub fn add_two_numbers(l1: Option<Box<ListNode>>, l2: Option<Box<ListNode>>) -> Option<Box<ListNode>> {
+        let mut dummy = Box::new(ListNode::new(0));
+        let mut current = &mut dummy;
+        let mut carry = 0;
+        let mut p = l1;
+        let mut q = l2;
+        
+        while p.is_some() || q.is_some() || carry != 0 {
+            let mut sum = carry;
+            
+            if let Some(node) = p {
+                sum += node.val;
+                p = node.next;
+            }
+            if let Some(node) = q {
+                sum += node.val;
+                q = node.next;
+            }
+            
+            carry = sum / 10;
+            current.next = Some(Box::new(ListNode::new(sum % 10)));
+            current = current.next.as_mut().unwrap();
         }
+        
+        dummy.next
     }
-
-    return result
-}
-
-func totalValue(node *ListNode) string {
-    
-    if node.Next == nil{
-        return strconv.Itoa(node.Val)
-    }
-
-    return totalValue(node.Next) + strconv.Itoa(node.Val)
 }
 
 ```
@@ -530,7 +470,7 @@ Let's outline the recursive approach:
 # Implementation
 
 Here's how we could implement this recursive approach:
-Java
+
 ```java []
 class Solution {
     public ListNode addTwoNumbers(ListNode l1, ListNode l2) {
@@ -599,7 +539,7 @@ class Solution {
     }
 }
 ```
-Python
+
 ```Python []
 class Solution:
     def addTwoNumbers(self, l1: Optional[ListNode], l2: Optional[ListNode]) -> Optional[ListNode]:
@@ -642,7 +582,6 @@ class Solution:
             padding -= 1
         return head
 ```
-C++
 ```C++ []
 class Solution {
 public:
@@ -703,7 +642,6 @@ private:
     }
 };
 ```
-JavaScript
 ```JavaScript []
 var addTwoNumbers = function(l1, l2) {
     const getLength = (head) => {
@@ -754,7 +692,6 @@ var addTwoNumbers = function(l1, l2) {
     return result.node;
 };
 ```
-Go
 ```Go []
 func addTwoNumbers(l1 *ListNode, l2 *ListNode) *ListNode {
     len1 := getLength(l1)
