@@ -1,6 +1,6 @@
 ### Intuition
 
-At its core, this problem asks us to take a linear structure (a linked list) and map it onto a two-dimensional structure (a matrix) in a specific pattern (spiral order). This transformation presents an interesting challenge because we're dealing with two fundamentally different data structures.
+This problem asks us to take a linear structure (a linked list) and map it onto a two-dimensional structure (a matrix) in a specific pattern (spiral order). This transformation presents an interesting challenge because we're dealing with two fundamentally different data structures.
 
 The spiral pattern adds another layer of complexity. We need to fill the matrix in a clockwise direction, starting from the top-left corner and spiraling inward. This isn't a straightforward row-by-row or column-by-column fill – we need to constantly change directions as we populate the matrix.
 
