@@ -15,7 +15,7 @@ Imagine we had an array that stored the cumulative XOR up to each index. So the 
 
 Let’s say we want the XOR of a subarray that starts at index `left` and ends at index `right`. If we’ve already calculated the XOR of the entire array up to `right`, and we’ve also calculated the XOR up to `left - 1`, we can get the XOR from `left` to `right` by removing the part of the array before `left`. In other words, the XOR from `left` to `right` is simply:
 
-{$XOR$ from left to right} = {$XOR$ up to right} \, ${XOR}$ \, {$XOR$ up to left - 1}
+$XOR$ from left to right = $XOR$ up to right , ${XOR}$ , $XOR$ up to left - 1
 
 This observation is important because it tells us that we can compute the XOR of any subarray if we know the XOR of the prefix (i.e., the XOR of all elements up to a certain point in the array).
 
