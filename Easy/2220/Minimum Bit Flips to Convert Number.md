@@ -87,9 +87,120 @@ What’s great about our current approach is that it combines all these ideas in
 
 This is a powerful technique that you can apply to many other problems that involve bit manipulation. The key takeaway here is that by thinking carefully about the structure of the problem—and by taking advantage of clever tricks like precomputation—you can often find solutions that are both faster and simpler than the naive approach.
 
+### Code 1
 
+```Java []
+class Solution {
+    private static final byte[] BIT_COUNT_TABLE = new byte[256];
+    
+    static {
+        for (int i = 0; i < 256; i++) {
+            BIT_COUNT_TABLE[i] = (byte) Integer.bitCount(i);
+        }
+    }
+    
+    public int minBitFlips(int start, int goal) {
+        int xor = start ^ goal;
+        return (BIT_COUNT_TABLE[xor & 0xff] +
+                BIT_COUNT_TABLE[(xor >>> 8) & 0xff] +
+                BIT_COUNT_TABLE[(xor >>> 16) & 0xff] +
+                BIT_COUNT_TABLE[(xor >>> 24) & 0xff]);
+    }
+}
+```
+```C++ []
+class Solution {
+private:
+    static constexpr std::array<uint8_t, 256> BIT_COUNT_TABLE = [] {
+        std::array<uint8_t, 256> table{};
+        for (int i = 0; i < 256; i++) {
+            table[i] = __builtin_popcount(i);
+        }
+        return table;
+    }();
+
+public:
+    int minBitFlips(int start, int goal) {
+        uint32_t xor_result = start ^ goal;
+        return BIT_COUNT_TABLE[xor_result & 0xFF] +
+               BIT_COUNT_TABLE[(xor_result >> 8) & 0xFF] +
+               BIT_COUNT_TABLE[(xor_result >> 16) & 0xFF] +
+               BIT_COUNT_TABLE[(xor_result >> 24) & 0xFF];
+    }
+};
+```
+```Python []
+class Solution:
+    BIT_COUNT_TABLE = [bin(i).count('1') for i in range(256)]
+
+    def minBitFlips(self, start: int, goal: int) -> int:
+        xor_result = start ^ goal
+        return (self.BIT_COUNT_TABLE[xor_result & 0xFF] +
+                self.BIT_COUNT_TABLE[(xor_result >> 8) & 0xFF] +
+                self.BIT_COUNT_TABLE[(xor_result >> 16) & 0xFF] +
+                self.BIT_COUNT_TABLE[(xor_result >> 24) & 0xFF])
+```
+```Go []
+var bitCountTable [256]byte
+
+func init() {
+    for i := 0; i < 256; i++ {
+        bitCountTable[i] = byte(bits.OnesCount(uint(i)))
+    }
+}
+
+func minBitFlips(start int, goal int) int {
+    xor := uint32(start ^ goal)
+    return int(bitCountTable[xor&0xFF] +
+        bitCountTable[(xor>>8)&0xFF] +
+        bitCountTable[(xor>>16)&0xFF] +
+        bitCountTable[(xor>>24)&0xFF])
+}
+```
+```Rust []
+impl Solution {
+    const BIT_COUNT_TABLE: [u8; 256] = {
+        let mut table = [0; 256];
+        let mut i = 0;
+        while i < 256 {
+            table[i] = i.count_ones() as u8;
+            i += 1;
+        }
+        table
+    };
+
+    pub fn min_bit_flips(start: i32, goal: i32) -> i32 {
+        let xor = (start ^ goal) as u32;
+        (Self::BIT_COUNT_TABLE[(xor & 0xFF) as usize] +
+         Self::BIT_COUNT_TABLE[((xor >> 8) & 0xFF) as usize] +
+         Self::BIT_COUNT_TABLE[((xor >> 16) & 0xFF) as usize] +
+         Self::BIT_COUNT_TABLE[((xor >> 24) & 0xFF) as usize]) as i32
+    }
+}
+```
+```JavaScript []
+// Pre-compute bit count table
+const BIT_COUNT_TABLE = new Uint8Array(256);
+for (let i = 0; i < 256; i++) {
+    BIT_COUNT_TABLE[i] = i.toString(2).split('1').length - 1;
+}
+
+/**
+ * @param {number} start
+ * @param {number} goal
+ * @return {number}
+ */
+var minBitFlips = function(start, goal) {
+    const xor = start ^ goal;
+    return (BIT_COUNT_TABLE[xor & 0xFF] +
+            BIT_COUNT_TABLE[(xor >>> 8) & 0xFF] +
+            BIT_COUNT_TABLE[(xor >>> 16) & 0xFF] +
+            BIT_COUNT_TABLE[(xor >>> 24) & 0xFF]);
+};
+```
 ### Code 2
 
+using built-in functions
 
 Java
 
