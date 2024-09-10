@@ -1,22 +1,21 @@
 ```Java []
 class Solution {
     public int[] xorQueries(int[] arr, int[][] queries) {
-        for(int i =1;i<arr.length;i++){
-            arr[i] = arr[i-1]^arr[i];
-        }
-        int [] xor = new int [queries.length];
+        int n = arr.length;
+        int m = queries.length;
 
-        for(int i =0;i<queries.length;i++){
-            int l = queries[i][0];
-            int r = queries [i][1];
-            if(l>0){
-                xor[i] = arr[r]^arr[l-1];
-            }
-            else{
-                xor[i] = arr[r];
-            }
+        for (int i = 1; i < n; i++) {
+            arr[i] ^= arr[i - 1];
         }
-        return xor;
+        
+ 
+        int[] result = new int[m];
+        for (int i = 0; i < m; i++) {
+            int start = queries[i][0], end = queries[i][1];
+            result[i] = start > 0 ? arr[end] ^ arr[start - 1] : arr[end];
+        }
+        
+        return result;
     }
 }
 
@@ -26,44 +25,44 @@ class Solution {
 class Solution {
 public:
     vector<int> xorQueries(vector<int>& arr, vector<vector<int>>& queries) {
-        vector<int> result;
-        for (int i = 1; i < arr.size(); ++i) {
+        int n = arr.size();
+        int m = queries.size();
+  
+        for (int i = 1; i < n; ++i) {
             arr[i] ^= arr[i - 1];
         }
 
-        for (const auto& q : queries) {
-            if (q[0] > 0) {
-                result.push_back(arr[q[0] - 1] ^ arr[q[1]]);
-            } else {
-                result.push_back(arr[q[1]]);
-            }
-        }
+        vector<int> result;
+        result.reserve(m);
 
+        for (const auto& q : queries) {
+            int start = q[0], end = q[1];
+            result.push_back(start > 0 ? arr[end] ^ arr[start - 1] : arr[end]);
+        }
+        
         return result;
     }
 };
-static const int kds = []() {
-    ios::sync_with_stdio(false);
-    cin.tie(nullptr);
-    cout.tie(nullptr);
+
+
+static const int KDS = []() {
+    std::ios::sync_with_stdio(false);
+    std::cin.tie(nullptr);
+    std::cout.tie(nullptr);
     return 0;
 }();
 //KDS
 ```
 ```Python []
 class Solution:
-    def xorQueries(self, arr, queries):
+    def xorQueries(self, arr: List[int], queries: List[List[int]]) -> List[int]:
+
         for i in range(1, len(arr)):
-            arr[i] = arr[i-1] ^ arr[i]
+            arr[i] ^= arr[i - 1]
         
-        xor = []
-        for l, r in queries:
-            if l > 0:
-                xor.append(arr[r] ^ arr[l-1])
-            else:
-                xor.append(arr[r])
-        
-        return xor
+  
+        return [arr[end] ^ arr[start - 1] if start > 0 else arr[end] 
+                for start, end in queries]
 
 def kdsmain():
     input_data = sys.stdin.read().strip()
