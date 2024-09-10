@@ -577,3 +577,177 @@ var findTheLongestSubstring = function(s) {
 //kartikdevsharmaa
 
 ```
+### Approach 2 optimized 
+```Java []
+class Solution {
+    private static final int[] CHARACTER_MAP = new int[]{1,0,0,0,2,0,0,0,4,0,0,0,0,0,8,0,0,0,0,0,16,0,0,0,0,0};
+    
+    public int findTheLongestSubstring(String s) {
+        int[] mp = new int[32];
+        Arrays.fill(mp, -1);
+        
+        int prefixXOR = 0;
+        int longestSubstring = 0;
+        mp[0] = 0;
+        
+        for (int i = 0; i < s.length(); i++) {
+            prefixXOR ^= CHARACTER_MAP[s.charAt(i) - 'a'];
+            if (mp[prefixXOR] == -1) {
+                mp[prefixXOR] = i + 1;
+            } else {
+                longestSubstring = Math.max(longestSubstring, i - mp[prefixXOR] + 1);
+            }
+        }
+        
+        return longestSubstring;
+    }
+}
+//KDS
+```
+```C++ []
+class Solution {
+public:
+    int findTheLongestSubstring(std::string_view s) {
+        static const int characterMap[26] = {1,0,0,0,2,0,0,0,4,0,0,0,0,0,8,0,0,0,0,0,16,0,0,0,0,0};
+        int mp[32];
+        memset(mp, -1, sizeof(mp));
+        
+        int prefixXOR = 0;
+        int longestSubstring = 0;
+        mp[0] = 0;
+
+        for (int i = 0; i < s.length(); ++i) {
+            prefixXOR ^= characterMap[s[i] - 'a'];
+            if (mp[prefixXOR] == -1) {
+                mp[prefixXOR] = i + 1;
+            } else {
+                longestSubstring = std::max(longestSubstring, i - mp[prefixXOR] + 1);
+            }
+        }
+
+        return longestSubstring;
+    }
+};
+
+static const auto kds = []() {
+    std::ios::sync_with_stdio(false);
+    std::cin.tie(nullptr);
+    std::cout.tie(nullptr);
+    return 0;
+}();
+//kartikdevsharmaa
+```
+```Python []
+class Solution:
+    def findTheLongestSubstring(self, s: str) -> int:
+        CHARACTER_MAP = [1,0,0,0,2,0,0,0,4,0,0,0,0,0,8,0,0,0,0,0,16,0,0,0,0,0]
+        mp = [-1] * 32
+        prefix_xor = longest_substring = 0
+        mp[0] = 0
+        
+        for i, char in enumerate(s, 1):
+            prefix_xor ^= CHARACTER_MAP[ord(char) - ord('a')]
+            if mp[prefix_xor] == -1:
+                mp[prefix_xor] = i
+            else:
+                longest_substring = max(longest_substring, i - mp[prefix_xor])
+        
+        return longest_substring
+def kdsmain():
+    input_data = sys.stdin.read().strip()
+    lines = input_data.splitlines()
+    
+    results = []
+    solution = Solution()
+    for line in lines:
+        try:
+            s = json.loads(line)
+            if not isinstance(s, str):
+                raise ValueError("Input is not a string")
+            result = solution.findTheLongestSubstring(s)
+            results.append(str(result))
+        except json.JSONDecodeError:
+            results.append("Invalid JSON input")
+        except ValueError as e:
+            results.append(f"Error: {str(e)}")
+
+    with open('user.out', 'w') as f:
+        for result in results:
+            f.write(f"{result}\n")
+
+if __name__ == "__main__":
+    kdsmain()
+    sys.exit(0)
+```
+```Go []
+func findTheLongestSubstring(s string) int {
+    characterMap := [26]int{1,0,0,0,2,0,0,0,4,0,0,0,0,0,8,0,0,0,0,0,16,0,0,0,0,0}
+    mp := [32]int{}
+    for i := range mp {
+        mp[i] = -1
+    }
+    
+    prefixXOR := 0
+    longestSubstring := 0
+    mp[0] = 0
+    
+    for i := 0; i < len(s); i++ {
+        prefixXOR ^= characterMap[s[i] - 'a']
+        if mp[prefixXOR] == -1 {
+            mp[prefixXOR] = i + 1
+        } else {
+            if i - mp[prefixXOR] + 1 > longestSubstring {
+                longestSubstring = i - mp[prefixXOR] + 1
+            }
+        }
+    }
+    
+    return longestSubstring
+}
+```
+```Rust []
+impl Solution {
+    pub fn find_the_longest_substring(s: String) -> i32 {
+        const CHARACTER_MAP: [i32; 26] = [1,0,0,0,2,0,0,0,4,0,0,0,0,0,8,0,0,0,0,0,16,0,0,0,0,0];
+        let mut mp = [-1; 32];
+        let mut prefix_xor = 0;
+        let mut longest_substring = 0;
+        mp[0] = 0;
+        
+        for (i, c) in s.chars().enumerate() {
+            prefix_xor ^= CHARACTER_MAP[(c as u8 - b'a') as usize];
+            if mp[prefix_xor as usize] == -1 {
+                mp[prefix_xor as usize] = i as i32 + 1;
+            } else {
+                longest_substring = longest_substring.max(i as i32 - mp[prefix_xor as usize] + 1);
+            }
+        }
+        
+        longest_substring
+    }
+}
+```
+```JavaScript []
+/**
+ * @param {string} s
+ * @return {number}
+ */
+var findTheLongestSubstring = function(s) {
+    const CHARACTER_MAP = [1,0,0,0,2,0,0,0,4,0,0,0,0,0,8,0,0,0,0,0,16,0,0,0,0,0];
+    const mp = new Int32Array(32).fill(-1);
+    let prefixXOR = 0;
+    let longestSubstring = 0;
+    mp[0] = 0;
+    
+    for (let i = 0; i < s.length; i++) {
+        prefixXOR ^= CHARACTER_MAP[s.charCodeAt(i) - 97]; // 97 is the ASCII code for 'a'
+        if (mp[prefixXOR] === -1) {
+            mp[prefixXOR] = i + 1;
+        } else {
+            longestSubstring = Math.max(longestSubstring, i - mp[prefixXOR] + 1);
+        }
+    }
+    
+    return longestSubstring;
+};
+```
