@@ -89,7 +89,305 @@ Think of how this solution scales. As the array gets larger, our preprocessing s
 
 
 ---
+### Implementation
+We are given an array of integers and several queries, each consisting of two indices `[left, right]`. For each query, we are asked to compute the XOR of the elements from index `left` to index `right`. The goal is to find an efficient way to compute the XOR for these queries, especially when the array is large, and the number of queries is also large.
 
+  
+
+### XOR Basics
+
+  
+
+XOR (Exclusive OR) is a bitwise operation that works on individual bits. When applied to two bits:
+
+- `0 XOR 0 = 0`
+
+- `1 XOR 1 = 0`
+
+- `0 XOR 1 = 1`
+
+- `1 XOR 0 = 1`
+
+  
+
+Some important properties of XOR that we'll use in  this problem are:
+
+1. **XOR is associative and commutative:** This means the order of operations does not matter. For example:
+
+- `(a XOR b) XOR c = a XOR (b XOR c)`
+
+- `a XOR b = b XOR a`
+
+2. **XOR with the same number cancels out:** For any integer `x`, `x XOR x = 0`.
+
+  
+
+3. **XOR with 0 returns the original number:** `x XOR 0 = x`.
+
+  
+
+
+
+  
+
+
+
+  
+
+We are using the **prefix XOR** technique, which allows us to compute the XOR of any subarray in constant time after an initial preprocessing step. The key insight is that the XOR of any subarray can be derived from the XOR of the array's prefixes.
+
+  
+
+#### 1. **Prefix XOR Concept**
+
+  
+
+We define the prefix XOR up to index `i` as the XOR of all elements from index `0` to index `i`. Let’s denote this as `prefixXOR[i]`.
+
+  
+
+Mathematically:
+
+$prefixXOR[i] = arr[0] \, XOR \, arr[1] \, XOR \, \dots \, XOR \, arr[i]$
+
+  
+
+Now, the XOR of any subarray from `left` to `right` can be derived using the following formula:
+
+$XOR(left, right) = prefixXOR[right] \, XOR \, prefixXOR[left - 1]$
+
+This works because XOR is its own inverse. When we XOR the entire prefix up to `right` with the prefix up to `left - 1`, the part of the prefix before `left` cancels out, leaving only the XOR from `left` to `right`.
+
+  
+
+#### 2. **Special Case: When `left = 0`**
+
+  
+
+When `left = 0`, the prefix XOR up to `left - 1` does not exist. In this  case, the XOR of the subarray from `0` to `right` is simply `prefixXOR[right]`.
+
+  
+
+### Steps to Solve the Problem
+
+  
+
+1. **Precompute Prefix XOR Array:**
+
+- Traverse the array once and compute the prefix XOR for  each index.
+
+- Store the result in the same array or a separate array to save space and optimize memory usage.
+
+  
+
+2. **Answer Queries in Constant Time:**
+
+- For each query, if `left > 0`, compute the XOR as `prefixXOR[right] XOR prefixXOR[left - 1]`. If `left = 0`, return `prefixXOR[right]` directly.
+
+  
+
+
+  
+
+
+
+  
+
+
+
+  
+
+#### 1. **Precompute the Prefix XOR Array**
+
+  
+
+```pseudo
+
+function precomputePrefixXOR(arr):
+
+n = length(arr)
+
+for i = 1 to n-1:
+
+arr[i] = arr[i] XOR arr[i-1]
+
+```
+
+  
+
+- Here, we modify the original array `arr` in place. Starting from the second element (index `1`), we XOR each element with the previous one to calculate the cumulative XOR up to that index.
+
+  
+
+#### 2. **Answering Queries**
+
+  
+
+```pseudo
+
+function queryXOR(arr, left, right):
+
+if left == 0:
+
+return arr[right]
+
+else:
+
+return arr[right] XOR arr[left-1]
+
+```
+
+  
+
+- For each query, we check if `left` is `0`. If it is, we directly return the cumulative XOR up to `right`. Otherwise, we XOR the cumulative XOR up to `right` with the cumulative XOR up to `left-1` to cancel out the unnecessary portion and get the desired subarray XOR.
+
+  
+
+
+
+  
+
+Let’s walk through the entire process using an example.
+
+  
+
+#### Example
+
+  
+
+Consider the array:
+
+```
+
+arr = [1, 3, 4, 8]
+
+```
+
+  
+
+And the queries:
+
+```
+
+queries = [[0, 1], [1, 2], [0, 3], [3, 3]]
+
+```
+
+  
+
+#### Step 1: Precompute the Prefix XOR
+
+  
+
+We iterate over the array and compute the prefix XOR:
+
+  
+
+1. Initially: `arr = [1, 3, 4, 8]`
+
+2. Compute XOR at index 1:
+
+$arr[1] = arr[1] XOR arr[0] = 3 XOR 1 = 2$
+
+Now, `arr = [1, 2, 4, 8]`
+
+3. Compute XOR at index 2:
+
+$arr[2] = arr[2] XOR arr[1] = 4 XOR 2 = 6$
+
+Now, `arr = [1, 2, 6, 8]`
+
+4. Compute XOR at index 3:
+
+$arr[3] = arr[3] XOR arr[2] = 8 XOR 6 = 14$
+
+Now, `arr = [1, 2, 6, 14]`
+
+  
+
+#### Step 2: Answer Queries
+
+  
+
+Now that we have the prefix XOR array, we can answer each query in constant time:
+
+  
+
+1. **Query [0, 1]**: Since `left = 0`, we directly return `arr[1] = 2`.
+
+  
+
+2. **Query [1, 2]**: We compute:
+
+$arr[2] XOR arr[0] = 6 XOR 1 = 7$
+
+  
+
+3. **Query [0, 3]**: Since `left = 0`, we directly return `arr[3] = 14`.
+
+  
+
+4. **Query [3, 3]**: We compute:
+
+$arr[3] XOR arr[2] = 14 XOR 6 = 8$
+
+  
+
+Thus, the results for the queries are:
+
+```
+
+[2, 7, 14, 8]
+
+```
+
+  
+
+
+  
+
+This approach uses the **associative and inverse properties of XOR** to avoid recalculating the XOR for overlapping subarrays. By precomputing the prefix XOR values, we can "cancel out" the parts of the array that don't contribute to the final result.
+
+  
+
+- **Precomputing the Prefix XOR:** This is done in linear time, i.e., `O(n)`, by iterating over the array once and calculating the cumulative XOR up to each index.
+
+  
+
+- **Answering Queries in Constant Time:** Once we have the prefix XOR values, we can answer each query in constant time, i.e., `O(1)`, by simply applying the XOR between the appropriate indices.
+
+  
+
+---
+
+### Complexity Analysis
+
+#### Time Complexity
+
+#### Preprocessing Phase
+- The algorithm first modifies the input array to create a prefix XOR array.
+- This involves a single pass through the array, performing an XOR operation for each element (except the first).
+- Time complexity: O(n), where n is the length of the input array.
+
+#### Query Processing Phase
+- For each query, the algorithm performs at most one XOR operation.
+- This operation takes constant time, O(1), regardless of the size of the array.
+- With m queries, the total time for processing queries is O(m).
+
+#### Overall Time Complexity
+- Total time complexity: O(n + m)
+  - O(n) for preprocessing
+  - O(m) for processing m queries
+
+#### Space Complexity
+
+#### Additional Space Usage
+- The algorithm modifies the input array in-place for preprocessing.
+- It creates a new array `result` to store query results.
+- Space for `result`: O(m), where m is the number of queries.
+
+#### Overall Space Complexity
+- O(m) additional space
 
 
 
@@ -185,4 +483,93 @@ if __name__ == "__main__":
     exit(0)
 #Kartikdevsharmaa
 
+```
+
+
+
+```Go []
+func xorQueries(arr []int, queries [][]int) []int {
+    for i := 1; i < len(arr); i++ {
+        arr[i] ^= arr[i-1]
+    }
+    
+    result := make([]int, len(queries))
+    for i, query := range queries {
+        start, end := query[0], query[1]
+        if start > 0 {
+            result[i] = arr[end] ^ arr[start-1]
+        } else {
+            result[i] = arr[end]
+        }
+    }
+    
+    return result
+}
+```
+```Rust []
+impl Solution {
+    pub fn xor_queries(mut arr: Vec<i32>, queries: Vec<Vec<i32>>) -> Vec<i32> {
+        for i in 1..arr.len() {
+            arr[i] ^= arr[i - 1];
+        }
+        
+        queries.iter().map(|q| {
+            let (start, end) = (q[0] as usize, q[1] as usize);
+            if start > 0 {
+                arr[end] ^ arr[start - 1]
+            } else {
+                arr[end]
+            }
+        }).collect()
+    }
+}
+
+```JavaScript []
+var xorQueries = function(arr, queries) {
+    for (let i = 1; i < arr.length; i++) {
+        arr[i] ^= arr[i - 1];
+    }
+    
+    return queries.map(([start, end]) => 
+        start > 0 ? arr[end] ^ arr[start - 1] : arr[end]
+    );
+};
+```
+```C# []
+public class Solution {
+    public int[] XorQueries(int[] arr, int[][] queries) {
+        for (int i = 1; i < arr.Length; i++) {
+            arr[i] ^= arr[i - 1];
+        }
+        
+        return queries.Select(q => {
+            int start = q[0], end = q[1];
+            return start > 0 ? arr[end] ^ arr[start - 1] : arr[end];
+        }).ToArray();
+    }
+}
+```
+```Kotlin []
+class Solution {
+    fun xorQueries(arr: IntArray, queries: Array<IntArray>): IntArray {
+        for (i in 1 until arr.size) {
+            arr[i] = arr[i] xor arr[i - 1]
+        }
+        
+        return queries.map { (start, end) ->
+            if (start > 0) arr[end] xor arr[start - 1] else arr[end]
+        }.toIntArray()
+    }
+}
+```
+```TypeScript []
+function xorQueries(arr: number[], queries: number[][]): number[] {
+    for (let i = 1; i < arr.length; i++) {
+        arr[i] ^= arr[i - 1];
+    }
+    
+    return queries.map(([start, end]) => 
+        start > 0 ? arr[end] ^ arr[start - 1] : arr[end]
+    );
+}
 ```
