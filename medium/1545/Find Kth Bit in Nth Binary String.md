@@ -244,7 +244,22 @@ class Solution:
 #Kartikdevsharmaa
 ```
 ```Go []
-
+func findKthBit(n int, k int) byte {
+    // Calculate the position of the rightmost set bit
+    rightmostSetBit := k & -k
+    
+    // Determine if the number of set bits before k is odd
+    isOddSetBits := ((k / rightmostSetBit) >> 1 & 1) == 1
+    
+    // Determine if k is odd
+    isKOdd := (k & 1) == 1
+    
+    // XOR the above conditions and convert to byte
+    if isOddSetBits != isKOdd {
+        return '0'
+    }
+    return '1'
+}
 ```
 ```Rust []
 impl Solution {
