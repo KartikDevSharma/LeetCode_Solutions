@@ -2,6 +2,7 @@
 
 
 
+
 ### **Understanding the Problem:**
 
 We’re given an array of integers, right? It’s a list of positive numbers, and we’re asked to solve several queries on it. Each query gives us two indices: a starting point and an ending point. What we’re supposed to do is compute the XOR of the elements between those indices. If you’ve never worked with XOR before, think of it as a special kind of operation that compares numbers at the bit level, flipping bits where the numbers differ. 
@@ -33,7 +34,7 @@ This is starting to look promising. We could precompute this cumulative XOR arra
 
 Let’s say we want the XOR of a subarray that starts at index `left` and ends at index `right`. If we’ve already calculated the XOR of the entire array up to `right`, and we’ve also calculated the XOR up to `left - 1`, we can get the XOR from `left` to `right` by removing the part of the array before `left`. In other words, the XOR from `left` to `right` is simply:
 
-\[ \text{XOR from left to right} = \text{XOR up to right} \, \text{XOR} \, \text{XOR up to left - 1} \]
+${XOR from left to right} = ${XOR up to right} \, ${XOR} \, ${XOR up to left - 1}$
 
 This observation is crucial because it tells us that we can compute the XOR of any subarray if we know the XOR of the prefix (i.e., the XOR of all elements up to a certain point in the array).
 
