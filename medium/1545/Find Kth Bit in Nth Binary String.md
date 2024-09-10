@@ -95,6 +95,29 @@ So, to summarize:
 - This recursive approach allows us to efficiently find the k-th bit without constructing the entire string, even for large values of $n$.
 
 This approach not only makes the problem manageable but also highlights the power of recursive thinking when dealing with self-similar structures like these binary strings.
+
+#### Time Complexity:
+Let’s break down the recursive approach:
+
+1. **Recursive calls:** Each time the function is called, it either directly returns '1' or makes a recursive call with either $n-1$ or some modified $k$.
+   - If $k < \text{midPoint}$, it recurses into the left half, reducing the problem to a smaller instance ($n-1$).
+   - If $k > \text{midPoint}$, it calculates the new $k$ and recurses into the right half.
+   
+   This forms a **binary search-like pattern**, where in each step we reduce the size of the problem by half. Therefore, the recursion depth is at most $O(n)$, since it keeps decreasing $n$ until it reaches 1.
+
+2. **Cost per recursive step:** The main cost in each step is constant $O(1)$ because calculating the midpoint, inverting the character, and deciding the direction (left or right half) takes constant time.
+
+Thus, the total time complexity is:
+$O(n)$
+Where $n$ is the initial input size.
+
+#### Space Complexity:
+- **Recursive call stack:** Each recursive call takes up space on the stack. Since we reduce $n$ by 1 with each call, the maximum depth of recursion is $n$, leading to a space complexity of $O(n)$ due to the call stack.
+
+- **Auxiliary space:** There’s no other significant auxiliary space usage apart from the stack and constant space for calculations.
+
+Hence, the space complexity is:
+$O(n)$
 ### Code
 
 ```Java []
@@ -329,7 +352,23 @@ This iterative approach has several advantages:
 - **Clarity and Simplicity:** The logic is straightforward: adjust $k$, flip the inversion flag when necessary, and finally return the correct bit once we reduce the problem down to $S_1$.
 
 This is a very clean and efficient solution that builds directly on the recursive approach, but takes it one step further by optimizing for both time and space!
+#### Time Complexity:
+In this approach, we avoid recursion and handle everything iteratively.
 
+1. **Loop Execution:** The `while` loop runs while $n > 1$, and in each iteration, $n$ is decremented by 1. Thus, the loop runs at most $n-1$ times, which is $O(n)$.
+   
+2. **Operations inside the loop:** Inside the loop, we calculate the midpoint and update $k$ based on whether it’s in the first or second half. Each of these operations—midpoint calculation, inversion flagging, and updating $k$—are all constant time operations, i.e., $O(1)$.
+
+Therefore, the total time complexity of this approach is:
+$O(n)$
+
+#### Space Complexity:
+- **No recursion:** Since the approach is iterative, there’s no recursive call stack, which saves space.
+- **Constant extra space:** The only additional space used is for a few variables like `midPoint`, `shouldInvert`, and $k$, all of which take constant space.
+
+Thus, the space complexity is:
+$O(1)$
+This makes this approach much more space-efficient than the recursive one.
 #### Code 
 
 ```Java []
@@ -570,7 +609,22 @@ The key insights here involve:
 - Using XOR to combine these conditions and determine the final bit.
 
 This solution is both elegant and highly efficient, operating in constant time $O(1)$ for each query—perfect for large inputs.
+#### Time Complexity:
+This approach relies purely on bitwise operations, which are extremely efficient.
 
+1. **Bitwise operations:** Operations like `k & -k`, right shifts (`>>`), and XOR are all constant time operations. These are performed a constant number of times regardless of the size of $n$ or $k$.
+
+2. **Dividing by `rightmostSetBit`:** Division and comparison checks (odd/even) are also constant time.
+
+In this approach, there are **no loops** or recursion. Every step runs in constant time $O(1)$, making the overall time complexity:
+$O(1)$
+
+#### Space Complexity:
+- **Constant space:** The only variables used are a few boolean flags and integers (`rightmostSetBit`, `isOddSetBits`, `isKOdd`). Each of these takes constant space.
+- **No recursion, no loops:** Since there are no recursive calls or loops, there’s no additional memory used for storing intermediate results.
+
+Thus, the space complexity is:
+$O(1)$
 ### Code
 ```Java []
 class Solution {
