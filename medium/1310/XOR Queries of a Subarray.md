@@ -618,8 +618,8 @@ $Q[L, R] = arr[L] ⊕ arr[L+1] ⊕ ... ⊕ arr[R]$
 
 Using the prefix XOR array, we can express this as:
 
-$Q[L, R] = P[R] ⊕ P[L-1] \quad \text{(if $L > 0$)}$
-$Q[L, R] = P[R] \quad \text{(if $L = 0$)}$
+$Q[L, R] = P[R] ⊕ P[L-1] \quad \text{(if L > 0)}$
+$Q[L, R] = P[R] \quad \text{(if L = 0)}$
 
 #### 4. **Proof of Correctness**
 
