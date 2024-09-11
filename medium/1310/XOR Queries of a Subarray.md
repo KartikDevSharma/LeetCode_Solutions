@@ -512,7 +512,7 @@ impl Solution {
         }).collect()
     }
 }
-
+```
 ```JavaScript []
 var xorQueries = function(arr, queries) {
     for (let i = 1; i < arr.length; i++) {
