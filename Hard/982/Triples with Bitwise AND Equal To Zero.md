@@ -1,3 +1,4 @@
+### Code 1
 ```Java []
 class Solution {
     public int countTriplets(int[] nums) {
@@ -114,4 +115,74 @@ class Solution:
         return totalTriplets
 
 #Kartikdevsharmaa
+```
+### Code 2
+```Java []
+class Solution {
+    public int countTriplets(int[] nums) {
+        int[] count = new int[1 << 16];
+        int result = 0;
+
+        for (int x : nums) {
+            for (int y : nums) {
+                count[x & y]++;
+            }
+        }
+
+        for (int z : nums) {
+            for (int i = 0; i < (1 << 16); i++) {
+                if ((i & z) == 0) {
+                    result += count[i];
+                }
+            }
+        }
+
+        return result;
+    }
+}
+//Kartikdevsharmaa
+```
+```C++ []
+class Solution {
+public:
+    int countTriplets(vector<int>& nums) {
+        vector<int> count(1 << 16, 0);
+        int result = 0;
+
+        for (int x : nums) {
+            for (int y : nums) {
+                count[x & y]++;
+            }
+        }
+
+        for (int z : nums) {
+            for (int i = 0; i < (1 << 16); i++) {
+                if ((i & z) == 0) {
+                    result += count[i];
+                }
+            }
+        }
+
+        return result;
+    }
+};
+
+```
+```Python []
+class Solution:
+    def countTriplets(self, nums):
+        count = [0] * (1 << 16)
+        result = 0
+
+        for x in nums:
+            for y in nums:
+                count[x & y] += 1
+
+        for z in nums:
+            for i in range(1 << 16):
+                if (i & z) == 0:
+                    result += count[i]
+
+        return result
+
 ```
