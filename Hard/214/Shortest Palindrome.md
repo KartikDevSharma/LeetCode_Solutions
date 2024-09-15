@@ -301,6 +301,7 @@ var shortestPalindrome = function(s) {
 ```
 
 ---
+### Appraoch 2
 This following code implements a solution for finding the shortest palindrome by using a **double rolling hash** to compare the original string and its reverse as you iterate over the characters. The purpose of using double hashing is to reduce the risk of **hash collisions**, where two different substrings may accidentally produce the same hash. 
 
 ### Explanation of the Code:
@@ -379,3 +380,132 @@ Function shortestPalindrome(s):
 
 ### Conclusion:
 This code refines the initial intuition by **adding robustness (double hashing)** and **optimizing space usage (on-the-fly reverse hashing)**, making it more reliable and efficient, especially for large input strings.
+
+
+### Approach 3
+
+
+```Java []
+class Solution {
+    public String shortestPalindrome(String s) {
+        if (s.isEmpty()) return s;
+        
+        String rev_s = new StringBuilder(s).reverse().toString();
+        String combined = s + "#" + rev_s;
+        
+        int[] z = calculateZ(combined);
+        
+        int max_prefix = 0;
+        for (int i = s.length() + 1; i < z.length; ++i) {
+            if (z[i] == combined.length() - i) {
+                max_prefix = z[i];
+                break;
+            }
+        }
+        
+        return rev_s.substring(0, s.length() - max_prefix) + s;
+    }
+    
+    private int[] calculateZ(String s) {
+        int n = s.length();
+        int[] z = new int[n];
+        int l = 0, r = 0;
+        
+        for (int i = 1; i < n; ++i) {
+            if (i <= r) {
+                z[i] = Math.min(r - i + 1, z[i - l]);
+            }
+            while (i + z[i] < n && s.charAt(z[i]) == s.charAt(i + z[i])) {
+                ++z[i];
+            }
+            if (i + z[i] - 1 > r) {
+                l = i;
+                r = i + z[i] - 1;
+            }
+        }
+        
+        return z;
+    }
+}
+```
+```C++ []
+class Solution {
+public:
+    string shortestPalindrome(string s) {
+        if (s.empty()) return s;
+
+        string rev_s = s;
+        reverse(rev_s.begin(), rev_s.end());
+        string combined = s + "#" + rev_s;
+
+        vector<int> z = calculateZ(combined);
+
+        int max_prefix = 0;
+        for (int i = s.length() + 1; i < z.size(); ++i) {
+            if (z[i] == combined.length() - i) {
+                max_prefix = z[i];
+                break;
+            }
+        }
+
+        return rev_s.substr(0, s.length() - max_prefix) + s;
+    }
+
+private:
+    vector<int> calculateZ(const string& s) {
+        int n = s.length();
+        vector<int> z(n, 0);
+        int l = 0, r = 0;
+
+        for (int i = 1; i < n; ++i) {
+            if (i <= r) {
+                z[i] = min(r - i + 1, z[i - l]);
+            }
+            while (i + z[i] < n && s[z[i]] == s[i + z[i]]) {
+                ++z[i];
+            }
+            if (i + z[i] - 1 > r) {
+                l = i;
+                r = i + z[i] - 1;
+            }
+        }
+
+        return z;
+    }
+};
+```
+```Python []
+class Solution:
+    def shortestPalindrome(self, s: str) -> str:
+        if not s:
+            return s
+        
+        rev_s = s[::-1]
+        combined = s + "#" + rev_s
+        
+        z = self.calculateZ(combined)
+        
+        max_prefix = 0
+        for i in range(len(s) + 1, len(z)):
+            if z[i] == len(combined) - i:
+                max_prefix = z[i]
+                break
+        
+        return rev_s[:len(s) - max_prefix] + s
+    
+    def calculateZ(self, s: str) -> list[int]:
+        n = len(s)
+        z = [0] * n
+        l, r = 0, 0
+        
+        for i in range(1, n):
+            if i <= r:
+                z[i] = min(r - i + 1, z[i - l])
+            while i + z[i] < n and s[z[i]] == s[i + z[i]]:
+                z[i] += 1
+            if i + z[i] - 1 > r:
+                l = i
+                r = i + z[i] - 1
+        
+        return z
+```
