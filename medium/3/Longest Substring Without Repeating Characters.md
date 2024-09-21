@@ -277,581 +277,304 @@ function hasUniqueCharacters(s, start, end) {
 ```
 
 ---
-# 2. Sliding Window Approach
+# 2.  Sliding Window Approach
 
 ## Intuition
 
-The core intuition behind this approach is to maintain a "window" of characters that are all unique. As we move through the string, we expand this window when we encounter new characters and contract it when we find repeating characters.
+The problem asks us to find the length of the **longest substring without repeating characters**. It might sound a bit technical at first, but we can break it down: 
+Imagine you’re given a string, like "abcabcbb". What we’re really being asked is, "What’s the longest continuous chunk of this string where no characters repeat?" For example, in "abcabcbb", the substring "abc" is the longest part where every character is different. So, in this case, the answer would be 3 because "abc" is made up of 3 unique characters.
+We're looking for the longest substring without repeating characters - seems simple enough, right? But We need to find a stretch of characters where each character appears only once it gets tricky when you have repeating characters in the string, like in the case of "abcabcbb". As soon as you hit the second 'a', the substring is no longer valid because the 'a' already appeared earlier. So, we’ll need to figure out how to handle those situations without missing the longest valid substring. That's our target. The challenge here is that we need to do this efficiently - we can't just check every possible substring, especially if the string is really long.
 
-Imagine you're reading a book and want to find the longest sequence of words where no word repeats. You might start by placing your left hand at the beginning of a sentence and your right hand a few words ahead. As you move your right hand forward (expanding the window), you keep track of each new word. If you encounter a word you've already seen, you move your left hand forward (contracting the window) until that repeated word is no longer in your current sequence. This process of expanding and contracting continues until you've covered the entire book.
+Our first instinct might be to use a brute force approach. We could check every possible substring, right? Start with the first character, then look at the first two, then the first three, and so on. For each substring, we'd check if it has any repeating characters. But let's think about this for a moment. For a string of length n, we'd be checking n(n+1)/2 substrings, and for each substring, we'd need to scan through its characters to check for duplicates. That's an O(n^3) time complexity - definitely not efficient, especially for longer strings!
 
-In our case, instead of words, we're dealing with individual characters in a string. The goal is to find the longest sequence of characters where each character appears only once.
+So, we need to refine our approach. This is where the concept of a sliding window comes in handy. Instead of checking every substring from scratch, what if we "slide" over the string, expanding or shrinking our window as we go? The window represents the current substring we're looking at, and we try to keep it as long as possible while ensuring there are no repeating characters inside it.
+
+Let's walk through this with an example, say "abcabcbb":
+
+1. We start with 'a'. Our window is just "a" - no repeats, so we're good.
+2. We move to 'b'. Window becomes "ab" - still no repeats.
+3. Next is 'c'. Window is "abc" - all unique so far.
+4. Now we hit another 'a'. Here's where it gets interesting. We can't just add this 'a' to our window because it would create a repeat. So, we need to shrink our window from the left until we remove the first 'a'.
+
+This is a key insight: when we see a repeating character, we don't need to start all over. We can just adjust our window by moving the left boundary. This lets us keep track of longer substrings without recomputing everything from scratch.
+
+![1.png](https://assets.leetcode.com/users/images/5b7bec34-333f-4cf5-9afd-49e067aa3a0b_1726933738.8377316.png)
+
+
+But Every time we hit a repeat, we're sliding the left side of the window one character at a time until the repeat is gone.  What if we could jump directly to the right position instead of sliding one by one? We need a way to quickly know where we last saw each character. A hash map could work, but remember, we're dealing with characters here. There's only a limited number of possible characters. we can use an array instead of a hash map, with each index representing a character. It's like having a direct line to where we last saw each character. This array will store the last seen position of each character we encounter.
+
+![2.png](https://assets.leetcode.com/users/images/e393d5df-3898-4b7d-9f80-945fd4032da4_1726933760.2353666.png)
+
+
+Now, let's think about how we'd use this array. As we move through the string with our end pointer, we're updating our array with the latest position of each character. But here's the magic - we can use this same array to update our start pointer. When we hit a repeated character, instead of slowly shrinking the window, we can jump our start pointer directly to the position after where we last saw the repeated character.
+
+But what if we've already moved past the last occurrence of the repeated character? We don't want to jump backwards, do we? This is where we use a max operation. We set our start pointer to the max of its current position and the position after where we last saw the repeated character. This ensures we're always moving forward, never backward.
+
+![3.png](https://assets.leetcode.com/users/images/05428eb3-cb75-41fe-aea7-a4613a089f0a_1726933802.502143.png)
+
+
+As we're doing all this, we're constantly updating our max length. Every time we move our end pointer, we check if this new substring is longer than our current max. It's like we're always ready to capture the longest substring at any moment.
+
+Let's think about edge cases for a moment. What if the string is empty? Or what if it's all the same character? Our approach handles these naturally. If it's empty, we never enter our loop. If it's all the same character, our max length will be 1.
+
+So:
+
+>1. We keep two pointers - start and end - representing our current window.
+>2. We maintain an array (let's call it lastIndex) to store the last seen position of each character.
+>3. As we move the end pointer through the string:
+	   - If the character at end is already in lastIndex and its position is after or at start, we need to jump start to skip over it.
+	   - We update lastIndex with the current position of the character.
+	   - We calculate the length of the current valid window (end - start + 1) and update our max length if needed.
+>4. We continue this until end reaches the end of the string.
+
+It only requires one pass through the string. We're doing all our work - updating last seen positions, moving our start pointer, and calculating our max length - all in one smooth motion through the string. In terms of space complexity, we're using a fixed-size array for our characters. This is much more efficient than storing substrings or using a variable-size data structure. Our time complexity is O(n) because we're only scanning through the string once, making this solution efficient even for very long strings.
 
 ## Approach
 
-Let's break down the approach into simple steps:
+As i have already told in the intuition that core idea behind our solution is to use a sliding window approach combined with character indexing. This allows us to efficiently scan through the string once while keeping track of the longest valid substring we've encountered so far.
 
-1. **Initialize a sliding window**: We use two pointers, `windowStart` and `windowEnd`, to define our current window. Initially, both point to the start of the string.
+The sliding window technique involves maintaining two pointers:
+1. A 'start' pointer that marks the beginning of our current substring.
+2. An 'end' pointer that we move through the string, expanding our substring.
 
-2. **Use a HashMap for efficient lookups**: We use a HashMap to keep track of characters we've seen and their most recent positions. This allows us to quickly check if a character is already in our current window.
+As we move the 'end' pointer, we're essentially expanding our window. When we encounter a repeated character, we need to contract our window by moving the 'start' pointer.
 
-3. **Expand the window**: We move the `windowEnd` pointer forward, adding each new character to our HashMap.
+To  handle repeated characters, we use an array to keep track of the last seen position of each character. This allows us to quickly jump our 'start' pointer to the correct position when we encounter a repeat, rather than moving it incrementally.
 
-4. **Handle repeating characters**: If we encounter a character that's already in our HashMap (i.e., it's repeating), we need to update our `windowStart`. We move it to the position just after the previous occurrence of the repeating character.
+![1.png](https://assets.leetcode.com/users/images/afd84683-1deb-461d-a38a-051236569f63_1726935224.8451877.png)
 
-5. **Update the maximum length**: After each step, we calculate the length of our current window and update our `maxLength` if necessary.
 
-6. **Repeat**: We continue this process until we've processed all characters in the string.
+### Initialization
 
-This approach allows us to efficiently find the longest substring without repeating characters in a single pass through the string.
+```
+n = length of s
+maxLength = 0
+lastIndex = array of 128 integers, all initialized to 0
+start = 0
+```
 
-**Pseudo Code**
+- We store the length of the input string in `n` for easy reference.
+- `maxLength` will keep track of the longest valid substring we've seen so far.
+- `lastIndex` is an array used to store the last seen position of each character. We use 128 as the size because it covers all ASCII characters. Each index in this array represents a character, and the value at that index represents the last position where we saw that character.
+- `start` is initialized to 0, representing the start of our sliding window.
+
+### Main Loop
+
+```
+for end = 0 to n-1:
+    currentChar = s[end]
+    start = max(start, lastIndex[currentChar])
+    maxLength = max(maxLength, end - start + 1)
+    lastIndex[currentChar] = end + 1
+```
+
+ We iterate through the string, moving our 'end' pointer from left to right.
+
+1. `currentChar = s[end]`: We get the current character at the 'end' position.
+
+2. `start = max(start, lastIndex[currentChar])`: This is a crucial step. We update our 'start' pointer to be the maximum of its current value and the last seen position of the current character plus one.
+
+   - If we haven't seen this character before (or if we've seen it, but it's outside our current window), `lastIndex[currentChar]` will be less than `start`, so `start` remains unchanged.
+   - If we have seen this character within our current window, `lastIndex[currentChar]` will be greater than or equal to `start`. In this case, we move `start` to the position just after where we last saw this character.
+
+   This step effectively "jumps" our start pointer to the correct position when we encounter a repeat, ensuring our window always contains unique characters.
+
+3. `maxLength = max(maxLength, end - start + 1)`: We update `maxLength` if our current window is longer than the previous longest substring.
+
+4. `lastIndex[currentChar] = end + 1`: We update the last seen position of the current character. We use `end + 1` instead of `end` because it simplifies our logic in step 2 - it allows us to move `start` directly to the correct position without needing to add 1.
+
+## Pseudo-code Algorithm
 
 
 ```
 function lengthOfLongestSubstring(s):
-    Initialize an empty HashMap charMap
-    Set maxLength to 0
-    Set windowStart to 0
-
-    For windowEnd from 0 to length of s - 1:
-        Get the current character at windowEnd
-
-        If the current character is already in charMap:
-            Update windowStart to max(windowStart, previous position of current character + 1)
-
-        Update the position of the current character in charMap
-
-        Calculate current window length (windowEnd - windowStart + 1)
-        Update maxLength if current window length is greater
-
-    Return maxLength
+    n = length of s
+    maxLength = 0
+    lastIndex = array of 128 integers, all initialized to 0
+    start = 0
+    
+    for end = 0 to n-1:
+        currentChar = s[end]
+        start = max(start, lastIndex[currentChar])
+        maxLength = max(maxLength, end - start + 1)
+        lastIndex[currentChar] = end + 1
+    
+    return maxLength
 ```
 
-This pseudo code outlines the main steps of our algorithm. It shows how we iterate through the string, handle repeating characters, and keep track of the maximum length.
 
-### Dry Run
+ The longest substring without repeating characters ending at any position must be built from a valid substring ending at the previous position. By maintaining a sliding window, we're always building on our previous valid substrings. By using the `lastIndex` array, we can update our `start` pointer in constant time whenever we encounter a repeat. This is much more efficient than scanning back through the substring to find the repeated character. We only need to go through the string once. At each step, we're making a constant number of operations (updating `start`, `maxLength`, and `lastIndex`), resulting in a linear time complexity. We're using a fixed-size array for `lastIndex`, regardless of the input size. This gives us constant space complexity.
 
-Let's do a dry run of the algorithm with the input string "abcabcbb". We'll use a table to show the state of our variables at each step.
+## Time and Space Complexity
 
-| Step | windowEnd | Current Char | charMap | windowStart | maxLength | Explanation |
-|------|-----------|--------------|---------|-------------|-----------|-------------|
-| 0 | 0 | 'a' | {} | 0 | 0 | Initial state |
-| 1 | 0 | 'a' | {a:0} | 0 | 1 | Add 'a' to charMap, update maxLength |
-| 2 | 1 | 'b' | {a:0, b:1} | 0 | 2 | Add 'b' to charMap, update maxLength |
-| 3 | 2 | 'c' | {a:0, b:1, c:2} | 0 | 3 | Add 'c' to charMap, update maxLength |
-| 4 | 3 | 'a' | {a:3, b:1, c:2} | 1 | 3 | 'a' repeats, move windowStart to 1 |
-| 5 | 4 | 'b' | {a:3, b:4, c:2} | 2 | 3 | 'b' repeats, move windowStart to 2 |
-| 6 | 5 | 'c' | {a:3, b:4, c:5} | 3 | 3 | 'c' repeats, move windowStart to 3 |
-| 7 | 6 | 'b' | {a:3, b:6, c:5} | 4 | 3 | 'b' repeats, move windowStart to 4 |
-| 8 | 7 | 'b' | {a:3, b:7, c:5} | 7 | 3 | 'b' repeats, move windowStart to 7 |
-
-Final result: The longest substring without repeating characters has a length of 3.
-
-Let's break down each step:
-
-1. We start with an empty `charMap`, `windowStart` at 0, and `maxLength` at 0.
-
-2. We encounter 'a'. It's not in `charMap`, so we add it. Our current window is "a", length 1.
-
-3. We encounter 'b'. It's not in `charMap`, so we add it. Our current window is "ab", length 2.
-
-4. We encounter 'c'. It's not in `charMap`, so we add it. Our current window is "abc", length 3.
-
-5. We encounter 'a' again. It's in `charMap` at position 0. We move `windowStart` to 1 (max(0, 0+1)). Our current window is "bca".
-
-6. We encounter 'b' again. It's in `charMap` at position 1. We move `windowStart` to 2 (max(1, 1+1)). Our current window is "cab".
-
-7. We encounter 'c' again. It's in `charMap` at position 2. We move `windowStart` to 3 (max(2, 2+1)). Our current window is "abc".
-
-8. We encounter 'b' again. It's in `charMap` at position 4. We move `windowStart` to 5 (max(3, 4+1)). Our current window is "b".
-
-9. We encounter the last 'b'. It's in `charMap` at position 6. We move `windowStart` to 7 (max(5, 6+1)). Our current window is "b".
-
-Throughout this process, the maximum length we found was 3, corresponding to the substrings "abc" or "cab".
-
-## Complexity Analysis
-
-### Time Complexity: O(n)
-
-- We iterate through the string exactly once, where n is the length of the string.
-- For each character, we perform constant time operations:
-  - Checking if the character is in the HashMap: O(1) on average
-  - Updating the HashMap: O(1) on average
-  - Updating `windowStart` and `maxLength`: O(1)
-- Therefore, the overall time complexity is O(n), where n is the length of the input string.
-
-### Space Complexity: O(min(m, n))
-
-- We use a HashMap to store characters and their indices.
-- In the worst case, the HashMap could store all characters in the string if they are all unique.
-- However, the size of the HashMap is bounded by the size of the character set (let's call it m) and the length of the string (n).
-- Therefore, the space complexity is O(min(m, n)).
-  - For example, if we're dealing with ASCII characters, m would be 128.
-  - If we're dealing with extended ASCII, m would be 256.
-  - For Unicode characters, m could be much larger, but still constant.
+- **Time Complexity: $O(n)$**, where n is the length of the input string. We make a single pass through the string, performing constant-time operations at each step.
+- **Space Complexity: $O(1)$**. We use a fixed-size array of 128 integers, regardless of the input size. This is considered constant space.
 
 
-### Code
-Java
-```Java []
+
+## Code
+```java []
 class Solution {
     public int lengthOfLongestSubstring(String s) {
-        Map<Character, Integer> charMap = new HashMap<>();
+        int n = s.length();
         int maxLength = 0;
-        int windowStart = 0;
-
-        for (int windowEnd = 0; windowEnd < s.length(); windowEnd++) {
-            char currentChar = s.charAt(windowEnd);
-
-            if (charMap.containsKey(currentChar)) {
-                windowStart = Math.max(windowStart, charMap.get(currentChar) + 1);
-            }
-
-            charMap.put(currentChar, windowEnd);
-            maxLength = Math.max(maxLength, windowEnd - windowStart + 1);
+        int[] lastIndex = new int[128];
+        
+        for (int start = 0, end = 0; end < n; end++) {
+            char currentChar = s.charAt(end);
+            start = Math.max(start, lastIndex[currentChar]);
+            maxLength = Math.max(maxLength, end - start + 1);
+            lastIndex[currentChar] = end + 1;
         }
-
+        
         return maxLength;
     }
 }
+//KDS
 ```
-C++
+
 ```C++ []
 class Solution {
 public:
     int lengthOfLongestSubstring(string s) {
-        unordered_map<char, int> charMap;
+        int n = s.length();
         int maxLength = 0;
-        int windowStart = 0;
-
-        for (int windowEnd = 0; windowEnd < s.length(); windowEnd++) {
-            char currentChar = s[windowEnd];
-
-            if (charMap.find(currentChar) != charMap.end()) {
-                windowStart = max(windowStart, charMap[currentChar] + 1);
-            }
-
-            charMap[currentChar] = windowEnd;
-            maxLength = max(maxLength, windowEnd - windowStart + 1);
+        vector<int> lastIndex(128, 0);
+        
+        for (int start = 0, end = 0; end < n; end++) {
+            char currentChar = s[end];
+            start = max(start, lastIndex[currentChar]);
+            maxLength = max(maxLength, end - start + 1);
+            lastIndex[currentChar] = end + 1;
         }
-
+        
         return maxLength;
     }
 };
 ```
-Python
 ```Python []
 class Solution:
     def lengthOfLongestSubstring(self, s: str) -> int:
-        char_map = {}
+        n = len(s)
         max_length = 0
-        window_start = 0
-
-        for window_end in range(len(s)):
-            current_char = s[window_end]
-
-            if current_char in char_map:
-                window_start = max(window_start, char_map[current_char] + 1)
-
-            char_map[current_char] = window_end
-            max_length = max(max_length, window_end - window_start + 1)
-
+        last_index = {}
+        
+        start = 0
+        for end in range(n):
+            current_char = s[end]
+            start = max(start, last_index.get(current_char, 0))
+            max_length = max(max_length, end - start + 1)
+            last_index[current_char] = end + 1
+        
         return max_length
 ```
-Go
 ```Go []
 func lengthOfLongestSubstring(s string) int {
-    charMap := make(map[byte]int)
+    n := len(s)
     maxLength := 0
-    windowStart := 0
-
-    for windowEnd := 0; windowEnd < len(s); windowEnd++ {
-        currentChar := s[windowEnd]
-
-        if index, found := charMap[currentChar]; found {
-            if index + 1 > windowStart {
-                windowStart = index + 1
-            }
+    lastIndex := make([]int, 128)
+    
+    start := 0
+    for end := 0; end < n; end++ {
+        currentChar := s[end]
+        if lastIndex[currentChar] > start {
+            start = lastIndex[currentChar]
         }
-
-        charMap[currentChar] = windowEnd
-        if windowEnd - windowStart + 1 > maxLength {
-            maxLength = windowEnd - windowStart + 1
+        if end-start+1 > maxLength {
+            maxLength = end - start + 1
         }
+        lastIndex[currentChar] = end + 1
     }
-
+    
     return maxLength
 }
-
 ```
-Rust
 ```Rust []
-use std::collections::HashMap;
-
 impl Solution {
     pub fn length_of_longest_substring(s: String) -> i32 {
-        let mut char_map = HashMap::new();
         let mut max_length = 0;
-        let mut window_start = 0;
-
-        for (window_end, current_char) in s.chars().enumerate() {
-            if let Some(&index) = char_map.get(&current_char) {
-                window_start = window_start.max(index + 1);
-            }
-
-            char_map.insert(current_char, window_end);
-            max_length = max_length.max(window_end - window_start + 1);
+        let mut last_index = [0; 128];
+        let mut start = 0;
+        
+        for (end, ch) in s.chars().enumerate() {
+            start = start.max(last_index[ch as usize]);
+            max_length = max_length.max(end - start + 1);
+            last_index[ch as usize] = end + 1;
         }
-
+        
         max_length as i32
     }
 }
 ```
-JavaScript
 ```JavaScript []
 /**
  * @param {string} s
  * @return {number}
  */
 var lengthOfLongestSubstring = function(s) {
-    const charMap = new Map();
+    let n = s.length;
     let maxLength = 0;
-    let windowStart = 0;
-
-    for (let windowEnd = 0; windowEnd < s.length; windowEnd++) {
-        const currentChar = s[windowEnd];
-
-        if (charMap.has(currentChar)) {
-            windowStart = Math.max(windowStart, charMap.get(currentChar) + 1);
-        }
-
-        charMap.set(currentChar, windowEnd);
-        maxLength = Math.max(maxLength, windowEnd - windowStart + 1);
+    let lastIndex = new Map();
+    
+    let start = 0;
+    for (let end = 0; end < n; end++) {
+        let currentChar = s[end];
+        start = Math.max(start, lastIndex.get(currentChar) || 0);
+        maxLength = Math.max(maxLength, end - start + 1);
+        lastIndex.set(currentChar, end + 1);
     }
-
+    
     return maxLength;
 };
 ```
-### Why is this efficient?
 
-1. **Single Pass**: We only need to go through the string once, which is optimal for this problem.
 
-2. **Constant Time Lookups**: By using a HashMap, we can check for repeating characters and update our window in constant time.
+## Example
+#### Example 1: **"abcabcbb"**
 
-3. **Space Efficient**: We only store each character once in our HashMap, keeping our space usage minimal.
+![1.png](https://assets.leetcode.com/users/images/ce8545f4-4481-479d-9206-b39d45058de7_1726936524.0809677.png)
 
-4. **Adapts to Input**: The algorithm naturally adapts to the complexity of the input. For strings with few repeating characters, it will tend towards O(n) space usage. For strings with many repeats, it will use less space.
+| Step | `end` | `start` | `currentChar` | `lastIndex[currentChar]` | `new start` | `window` | `maxLength` |
+|------|-------|---------|---------------|--------------------------|-------------|----------|-------------|
+| 1    | 0     | 0       | 'a'           | 0                        | 0           | "a"      | 1           |
+| 2    | 1     | 0       | 'b'           | 0                        | 0           | "ab"     | 2           |
+| 3    | 2     | 0       | 'c'           | 0                        | 0           | "abc"    | 3           |
+| 4    | 3     | 0       | 'a'           | 1                        | 1           | "bca"    | 3           |
+| 5    | 4     | 1       | 'b'           | 2                        | 2           | "cab"    | 3           |
+| 6    | 5     | 2       | 'c'           | 3                        | 3           | "abc"    | 3           |
+| 7    | 6     | 3       | 'b'           | 5                        | 5           | "b"      | 3           |
+| 8    | 7     | 5       | 'b'           | 6                        | 6           | "b"      | 3           |
 
----
+**Result:** The maximum valid window without repeating characters is `"abc"`, with a length of `3`.
 
 
-# 3. Optimized Sliding Window Approach
+#### Example 2: **"bbbbb"**
 
-## Comparison
+![2.png](https://assets.leetcode.com/users/images/3918d857-57fb-4e30-8756-047618424ff9_1726936556.1592152.png)
 
-Let's briefly recap the two approaches we've discussed earlier:
 
-1. **Brute Force Approach**: This method involves checking all possible substrings of the given string. While straightforward, it's inefficient with a time complexity of O(n^3) for a string of length n.
+| Step | `end` | `start` | `currentChar` | `lastIndex[currentChar]` | `new start` | `window` | `maxLength` |
+|------|-------|---------|---------------|--------------------------|-------------|----------|-------------|
+| 1    | 0     | 0       | 'b'           | 0                        | 0           | "b"      | 1           |
+| 2    | 1     | 0       | 'b'           | 1                        | 1           | "b"      | 1           |
+| 3    | 2     | 1       | 'b'           | 2                        | 2           | "b"      | 1           |
+| 4    | 3     | 2       | 'b'           | 3                        | 3           | "b"      | 1           |
+| 5    | 4     | 3       | 'b'           | 4                        | 4           | "b"      | 1           |
 
-2. **Basic Sliding Window Approach**: This improves upon the brute force method by maintaining a window of unique characters and expanding/contracting it as needed. It typically uses a HashSet to track unique characters and has a time complexity of O(n).
+**Result:** The longest substring without repeating characters is `"b"`, with a length of `1`.
 
 
 
-## Intuition
 
-The optimized sliding window approach builds upon the basic sliding window method but introduces a key optimization: instead of using a HashSet, it uses an integer array to keep track of character positions. This change allows for even faster lookups and more efficient window adjustments.
+#### Example 3: **"pwwkew"**
 
-The core intuition remains similar to the basic sliding window approach:
-- We maintain a window of unique characters.
-- We expand this window when we encounter new characters.
-- We contract it when we find repeating characters.
+| Step | `end` | `start` | `currentChar` | `lastIndex[currentChar]` | `new start` | `window` | `maxLength` |
+|------|-------|---------|---------------|--------------------------|-------------|----------|-------------|
+| 1    | 0     | 0       | 'p'           | 0                        | 0           | "p"      | 1           |
+| 2    | 1     | 0       | 'w'           | 0                        | 0           | "pw"     | 2           |
+| 3    | 2     | 0       | 'w'           | 2                        | 2           | "w"      | 2           |
+| 4    | 3     | 2       | 'k'           | 0                        | 2           | "wk"     | 2           |
+| 5    | 4     | 2       | 'e'           | 0                        | 2           | "wke"    | 3           |
+| 6    | 5     | 2       | 'w'           | 3                        | 3           | "kew"    | 3           |
 
-However, the way we handle repeating characters and adjust our window is more efficient in this optimized version.
-
-## Approach
-
-Let's understand the approach step by step:
-
-1. **Character Index Array**:
-   Instead of using a HashSet or HashMap, we use an integer array `charIndex` of size 128 (assuming ASCII characters). Each index in this array corresponds to a character's ASCII value, and the value stored is the last seen position of that character in the string.
-
-   ```java
-   int[] charIndex = new int[128];
-   Arrays.fill(charIndex, -1);
-   ```
-
-   This array serves two purposes:
-   - It tells us if we've seen a character before (if its value is not -1).
-   - It gives us the last position where we saw that character.
-
-2. **Sliding Window Pointers**:
-   We use two pointers:
-   - `windowStart`: The start of our current substring without repeating characters.
-   - `windowEnd`: The end of our current substring, which we'll iterate through the string.
-
-3. **Iteration and Window Adjustment**:
-   As we move `windowEnd` through the string:
-   
-   ```java
-   for (int windowEnd = 0; windowEnd < s.length(); windowEnd++) {
-       char currentChar = s.charAt(windowEnd);
-   ```
-
-   We check if we've seen the current character before and if it's within our current window:
-
-   ```java
-   if (charIndex[currentChar] >= windowStart) {
-       windowStart = charIndex[currentChar] + 1;
-   }
-   ```
-
-   If the character is repeating within the current window, we move `windowStart` to just after the last occurrence of this character. This is more efficient than the basic sliding window approach, where we might need to move the start pointer multiple times to remove all occurrences of the repeating character.
-
-4. **Updating Character Positions**:
-   We always update the last seen position of the current character:
-
-   ```java
-   charIndex[currentChar] = windowEnd;
-   ```
-
-5. **Updating Maximum Length**:
-   After each iteration, we update our `maxLength` if the current window size is larger:
-
-   ```java
-   maxLength = Math.max(maxLength, windowEnd - windowStart + 1);
-   ```
-### Pseudo-code
-
-
-```
-function lengthOfLongestSubstring(s):
-    Initialize charIndex array of size 128 with all values set to -1
-    Set maxLength to 0
-    Set windowStart to 0
-
-    For windowEnd from 0 to length of s - 1:
-        Get currentChar at index windowEnd in s
-        
-        If charIndex[currentChar] is greater than or equal to windowStart:
-            Update windowStart to charIndex[currentChar] + 1
-        
-        Update charIndex[currentChar] to windowEnd
-        Update maxLength to maximum of maxLength and (windowEnd - windowStart + 1)
-
-    Return maxLength
-```
-
-### Dry Run
-To truly understand how this algorithm works, let's do a dry run with an example string: **"abcabcbb"**
-
-
-
-| Step | windowEnd | currentChar | charIndex[currentChar] | windowStart | maxLength | charIndex Array (relevant parts)                |
-|------|-----------|-------------|------------------------|-------------|-----------|--------------------------------------------------|
-| 0    | 0         | 'a'         | -1                     | 0           | 1         | a:0                                              |
-| 1    | 1         | 'b'         | -1                     | 0           | 2         | a:0, b:1                                         |
-| 2    | 2         | 'c'         | -1                     | 0           | 3         | a:0, b:1, c:2                                    |
-| 3    | 3         | 'a'         | 0                      | 1           | 3         | a:3, b:1, c:2                                    |
-| 4    | 4         | 'b'         | 1                      | 2           | 3         | a:3, b:4, c:2                                    |
-| 5    | 5         | 'c'         | 2                      | 3           | 3         | a:3, b:4, c:5                                    |
-| 6    | 6         | 'b'         | 4                      | 5           | 3         | a:3, b:6, c:5                                    |
-| 7    | 7         | 'b'         | 6                      | 7           | 3         | a:3, b:7, c:5                                    |
-
-Let's go through each step:
-
-1. We start with 'a'. It's not seen before, so we add it to charIndex and set maxLength to 1.
-2. We see 'b'. It's new, so we extend our window and update maxLength to 2.
-3. We see 'c'. It's new, so we extend our window and update maxLength to 3.
-4. We see 'a' again. It was last seen at index 0, which is within our current window (0 to 3). So we move windowStart to 1 (0 + 1) and update 'a' in charIndex.
-5. We see 'b' again. It was last seen at index 1, which is within our current window (1 to 4). So we move windowStart to 2 and update 'b' in charIndex.
-6. We see 'c' again. It was last seen at index 2, which is within our current window (2 to 5). So we move windowStart to 3 and update 'c' in charIndex.
-7. We see 'b' again. It was last seen at index 4, which is within our current window (3 to 6). So we move windowStart to 5 and update 'b' in charIndex.
-8. We see 'b' again. It was last seen at index 6, which is within our current window (5 to 7). So we move windowStart to 7 and update 'b' in charIndex.
-
-Throughout this process, maxLength remains 3, which is our final answer.
-
-### Improvements Over Previous Approaches
-
-1. **Compared to Brute Force**:
-   - Time Complexity: O(n) vs O(n^3)
-   - We avoid generating and checking all possible substrings.
-   - We only need to iterate through the string once.
-
-2. **Compared to Basic Sliding Window**:
-   - More efficient space usage: We use a fixed-size array instead of a potentially large HashSet or HashMap.
-   - Faster lookups: Checking if a character exists and getting its last position is O(1) with direct array access, compared to HashSet/HashMap operations which, while typically O(1), have some overhead.
-   - More efficient window adjustment: We can jump the `windowStart` directly to the correct position instead of potentially making multiple adjustments.
-
-## Complexity Analysis
-
-- **Time Complexity**: O(n), where n is the length of the string.
-  We only iterate through the string once with the `windowEnd` pointer. All operations inside the loop (checking and updating `charIndex`, updating `maxLength`) are O(1).
-
-- **Space Complexity**: O(1)
-  We use a fixed-size array `charIndex` of size 128, which is constant regardless of the input size. This is an improvement over the basic sliding window approach, which might use O(min(m,n)) space for its HashSet/HashMap, where m is the size of the character set.
-
-
-
-
-
-
-### Code
-Java
-```Java []
-class Solution {
-    public int lengthOfLongestSubstring(String s) {
-        int[] charIndex = new int[128];
-        Arrays.fill(charIndex, -1);
-        int maxLength = 0;
-        int windowStart = 0;
-
-        for (int windowEnd = 0; windowEnd < s.length(); windowEnd++) {
-            char currentChar = s.charAt(windowEnd);
-            
-            if (charIndex[currentChar] >= windowStart) {
-                windowStart = charIndex[currentChar] + 1;
-            }
-
-            charIndex[currentChar] = windowEnd;
-            maxLength = Math.max(maxLength, windowEnd - windowStart + 1);
-        }
-
-        return maxLength;
-    }
-}
-```
-C++
-```C++ []
-class Solution {
-public:
-    int lengthOfLongestSubstring(string s) {
-        vector<int> charIndex(128, -1);
-        int maxLength = 0;
-        int windowStart = 0;
-
-        for (int windowEnd = 0; windowEnd < s.length(); windowEnd++) {
-            char currentChar = s[windowEnd];
-            
-            if (charIndex[currentChar] >= windowStart) {
-                windowStart = charIndex[currentChar] + 1;
-            }
-
-            charIndex[currentChar] = windowEnd;
-            maxLength = max(maxLength, windowEnd - windowStart + 1);
-        }
-
-        return maxLength;
-    }
-};
-```
-Python
-```Python []
-class Solution:
-    def lengthOfLongestSubstring(self, s: str) -> int:
-        char_index = [-1] * 128
-        max_length = 0
-        window_start = 0
-
-        for window_end, current_char in enumerate(s):
-            if char_index[ord(current_char)] >= window_start:
-                window_start = char_index[ord(current_char)] + 1
-
-            char_index[ord(current_char)] = window_end
-            max_length = max(max_length, window_end - window_start + 1)
-
-        return max_length
-```
-Go
-```Go []
-func lengthOfLongestSubstring(s string) int {
-    charIndex := make([]int, 128)
-    for i := range charIndex {
-        charIndex[i] = -1
-    }
-    maxLength := 0
-    windowStart := 0
-
-    for windowEnd := 0; windowEnd < len(s); windowEnd++ {
-        currentChar := s[windowEnd]
-        
-        if charIndex[currentChar] >= windowStart {
-            windowStart = charIndex[currentChar] + 1
-        }
-
-        charIndex[currentChar] = windowEnd
-        if windowEnd - windowStart + 1 > maxLength {
-            maxLength = windowEnd - windowStart + 1
-        }
-    }
-
-    return maxLength
-}
-
-```
-Rust
-```Rust []
-impl Solution {
-    pub fn length_of_longest_substring(s: String) -> i32 {
-        let mut char_index = [-1; 128];
-        let mut max_length = 0;
-        let mut window_start = 0;
-
-        for (window_end, current_char) in s.bytes().enumerate() {
-            let char_idx = current_char as usize;
-            
-            if char_index[char_idx] >= window_start {
-                window_start = char_index[char_idx] + 1;
-            }
-
-            char_index[char_idx] = window_end as i32;
-            max_length = max_length.max(window_end as i32 - window_start + 1);
-        }
-
-        max_length
-    }
-}
-```
-JavaScript
-```JavaScript []
-/**
- * @param {string} s
- * @return {number}
- */
-var lengthOfLongestSubstring = function(s) {
-    const charIndex = new Array(128).fill(-1);
-    let maxLength = 0;
-    let windowStart = 0;
-
-    for (let windowEnd = 0; windowEnd < s.length; windowEnd++) {
-        const currentChar = s.charCodeAt(windowEnd);
-        
-        if (charIndex[currentChar] >= windowStart) {
-            windowStart = charIndex[currentChar] + 1;
-        }
-
-        charIndex[currentChar] = windowEnd;
-        maxLength = Math.max(maxLength, windowEnd - windowStart + 1);
-    }
-
-    return maxLength;
-};
-```
-## Key Insights
-
-1. **Efficient Character Tracking**: 
-   By using an array indexed by ASCII values, we achieve O(1) lookups and updates for character positions. This is faster than using a HashSet or HashMap in practice.
-
-2. **Smart Window Adjustment**: 
-   When we encounter a repeating character, we can move the `windowStart` directly to the correct position, potentially skipping multiple adjustments that might be necessary in the basic sliding window approach.
-
-3. **Constant Space**: 
-   The use of a fixed-size array means our space complexity is O(1), which is optimal for this problem.
-
-4. **Single Pass**: 
-   Like the basic sliding window approach, this method only requires a single pass through the string, making it efficient for large inputs.
-
-5. **No Substring Storage**: 
-   We only keep track of the length of the longest substring, not the substring itself, which saves memory.
-
----
+**Result:** The longest substring without repeating characters is `"wke"` or `"kew"`, both with a length of `3`.
